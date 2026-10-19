@@ -1,8 +1,8 @@
-# AgentGuard
+# KakoroGuard
 
 **On-chain identity and role-based access control for autonomous AI agents.**
 
-AgentGuard is a Stellar Soroban registry that lets a human owner register an AI agent, grant it a role, and lets any API or settlement contract (including [AgentPay](https://github.com/AIonWeb3/AgentPay)) verify that agent before work or money moves.
+KakoroGuard is a Stellar Soroban registry that lets a human owner register an AI agent, grant it a role, and lets any API or settlement contract (including [AgentPay](https://github.com/AIonWeb3/AgentPay)) verify that agent before work or money moves.
 
 This repo is a pitchable product, not just a contract:
 
