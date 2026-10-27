@@ -1,9 +1,9 @@
-# AgentGuard Contract Architecture
+# KakoroGuard Contract Architecture
 
 This document describes the current Soroban contract, the gaps relative to a
 production kill-switch registry, and the implementation plan used to close them.
 
-Soroban SDK: **27.0.0** (`contracts/agent_guard/Cargo.toml`).
+Soroban SDK: **27.0.0** (`contracts/kakoro_guard/Cargo.toml`).
 
 ## Current layout
 

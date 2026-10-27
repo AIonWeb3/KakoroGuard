@@ -1,4 +1,4 @@
-# AgentGuard operator console
+# KakoroGuard operator console
 #
 #   npm install
 #   npm run dev

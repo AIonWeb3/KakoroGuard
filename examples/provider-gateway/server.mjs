@@ -1,8 +1,8 @@
 /**
  * Minimal resource-provider gateway.
  *
- * Shows how a backend gates an endpoint on AgentGuard roles.
- * Swap the mock `guard` for a real AgentGuardClient against testnet.
+ * Shows how a backend gates an endpoint on KakoroGuard roles.
+ * Swap the mock `guard` for a real KakoroGuardClient against testnet.
  *
  *   npm install
  *   npm start
@@ -32,7 +32,7 @@ function json(res, status, body) {
 
 const server = http.createServer(async (req, res) => {
   if (req.url === "/health") {
-    return json(res, 200, { ok: true, service: "agentguard-provider-demo" });
+    return json(res, 200, { ok: true, service: "kakoroguard-provider-demo" });
   }
 
   if (req.method === "GET" && req.url === "/v1/premium") {

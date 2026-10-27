@@ -1,7 +1,7 @@
 {
-  "name": "@agentguard/sdk",
+  "name": "@kakoroguard/sdk",
   "version": "0.2.0",
-  "description": "Identity and RBAC SDK for the AgentGuard Soroban contract",
+  "description": "Identity and RBAC SDK for the KakoroGuard Soroban contract",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

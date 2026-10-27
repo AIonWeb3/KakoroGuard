@@ -1,7 +1,7 @@
 /**
- * @agentguard/sdk — TypeScript Types
+ * @kakoroguard/sdk — TypeScript Types
  *
- * Mirrors the on-chain data types from the AgentGuard Soroban contract.
+ * Mirrors the on-chain data types from the KakoroGuard Soroban contract.
  */
 
 /**
@@ -70,10 +70,10 @@ export interface AgentProfile extends AgentRecord {
 }
 
 /**
- * Configuration options for the AgentGuard client.
+ * Configuration options for the KakoroGuard client.
  */
-export interface AgentGuardConfig {
-  /** The deployed AgentGuard contract ID (e.g., "CA..."). */
+export interface KakoroGuardConfig {
+  /** The deployed KakoroGuard contract ID (e.g., "CA..."). */
   contractId: string;
   /** Soroban RPC endpoint URL. */
   rpcUrl: string;

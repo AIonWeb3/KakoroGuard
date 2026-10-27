@@ -12,21 +12,21 @@ if [[ -f "$ROOT/.env" ]]; then
 fi
 
 IDENTITY="${STELLAR_IDENTITY:-}"
-CID="${AGENTGUARD_CONTRACT_ID:-}"
+CID="${KAKOROGUARD_CONTRACT_ID:-}"
 NETWORK="${STELLAR_NETWORK:-testnet}"
 
 if [[ -z "$IDENTITY" || -z "$CID" ]]; then
-  echo "Set STELLAR_IDENTITY and AGENTGUARD_CONTRACT_ID in .env" >&2
+  echo "Set STELLAR_IDENTITY and KAKOROGUARD_CONTRACT_ID in .env" >&2
   echo "See docs/DEPLOYMENT.md" >&2
   exit 1
 fi
 
 OWNER="$(stellar keys address "$IDENTITY")"
 # Second key used as the agent identity (generate if missing)
-if ! stellar keys address agentguard-demo-agent >/dev/null 2>&1; then
-  stellar keys generate agentguard-demo-agent --network "$NETWORK" >/dev/null
+if ! stellar keys address kakoroguard-demo-agent >/dev/null 2>&1; then
+  stellar keys generate kakoroguard-demo-agent --network "$NETWORK" >/dev/null
 fi
-AGENT="$(stellar keys address agentguard-demo-agent)"
+AGENT="$(stellar keys address kakoroguard-demo-agent)"
 
 invoke() {
   stellar contract invoke --id "$CID" --source-account "$IDENTITY" --network "$NETWORK" -- "$@"

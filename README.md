@@ -1,8 +1,8 @@
-# AgentGuard
+# KakoroGuard
 
 **On-chain identity and role-based access control for autonomous AI agents.**
 
-AgentGuard is a Stellar Soroban registry that lets a human owner register an AI agent, grant it a role, and lets any API or settlement contract (including [AgentPay](https://github.com/AIonWeb3/AgentPay)) verify that agent before work or money moves.
+KakoroGuard is a Stellar Soroban registry that lets a human owner register an AI agent, grant it a role, and lets any API or settlement contract (including [AgentPay](https://github.com/AIonWeb3/AgentPay)) verify that agent before work or money moves.
 
 This repo is a pitchable product, not just a contract:
 
@@ -41,7 +41,7 @@ Connect Freighter if you want the operator identity to be a real Stellar key. Th
 
 Autonomous agents are already calling APIs and initiating payments. Today that usually means a shared secret in a prompt, or the company's hot wallet. There is no identity, no role, and no way to freeze one bot without rotating everything.
 
-AgentGuard makes the agent a first-class on-chain principal:
+KakoroGuard makes the agent a first-class on-chain principal:
 
 - Distinct key per agent
 - Roles: `Basic < Premium < Admin` (higher satisfies lower)
@@ -55,7 +55,7 @@ AgentGuard makes the agent a first-class on-chain principal:
 
 ```
  ┌──────────────┐   register / grant / suspend    ┌────────────────┐
- │  Agent owner │ ───────────────────────────────► │  AgentGuard    │
+ │  Agent owner │ ───────────────────────────────► │  KakoroGuard   │
  │  (human)     │                                  │  contract      │
  └──────────────┘                                  └───────┬────────┘
                                                            │
@@ -66,7 +66,7 @@ AgentGuard makes the agent a first-class on-chain principal:
  └──────────────┘
 
  ┌──────────────┐     X-Agent-Public-Key           ┌────────────────┐
- │  Provider    │ ── requireAgent(Premium) ──────► │  @agentguard/  │
+ │  Provider    │ ── requireAgent(Premium) ──────► │  @kakoroguard/ │
  │  API         │                                  │  sdk           │
  └──────────────┘                                  └────────────────┘
 ```
@@ -106,7 +106,7 @@ Resource providers should call `check_access` (pure read / simulation — no fee
 
 ```bash
 stellar contract invoke \
-  --id "$AGENTGUARD_CONTRACT_ID" \
+  --id "$KAKOROGUARD_CONTRACT_ID" \
   --source-account "$STELLAR_IDENTITY" \
   --network testnet \
   -- \
@@ -151,11 +151,11 @@ npm run build
 ```
 
 ```ts
-import { AgentGuardClient, Role, requireRole } from "@agentguard/sdk";
+import { KakoroGuardClient, Role, requireRole } from "@kakoroguard/sdk";
 import { Networks } from "@stellar/stellar-sdk";
 
-const guard = new AgentGuardClient({
-  contractId: process.env.AGENTGUARD_ID!,
+const guard = new KakoroGuardClient({
+  contractId: process.env.KAKOROGUARD_ID!,
   rpcUrl: "https://soroban-testnet.stellar.org",
   networkPassphrase: Networks.TESTNET,
 });
@@ -172,9 +172,11 @@ A copy-paste HTTP gateway lives in `examples/provider-gateway`.
 ## Project layout
 
 ```
-contracts/agent_guard/   Soroban contract + tests
-sdk/                     TypeScript client + Express-style middleware
-dashboard/               Pitch console (Vite + React)
+contracts/kakoro_guard/   Soroban contract + tests
+kakoroguard-js/           TypeScript SDK for providers & signature verification
+kakoroguard-py/           Python SDK for agent keypairs & request signing
+sdk/                      TypeScript client + Express-style middleware
+dashboard/                Pitch console (Vite + React)
 examples/provider-gateway
 ```
 

@@ -1,4 +1,4 @@
-# AgentGuard — Stellar Testnet deployment
+# KakoroGuard — Stellar Testnet deployment
 
 Do not paste private keys into this file or into git. Use a named Stellar CLI identity.
 
@@ -9,12 +9,12 @@ Do not paste private keys into this file or into git. Use a named Stellar CLI id
 - A Testnet-funded identity:
 
 ```bash
-stellar keys generate agentguard-deployer --network testnet --fund
+stellar keys generate kakoroguard-deployer --network testnet --fund
 ```
 
 Fund the printed address from the [Stellar Laboratory friendbot](https://laboratory.stellar.org/#account-creator?network=testnet).
 
-Copy `.env.example` to `.env` and set `STELLAR_IDENTITY=agentguard-deployer`.
+Copy `.env.example` to `.env` and set `STELLAR_IDENTITY=kakoroguard-deployer`.
 
 ## Build optimized WASM
 
@@ -22,7 +22,7 @@ Copy `.env.example` to `.env` and set `STELLAR_IDENTITY=agentguard-deployer`.
 ./scripts/build-wasm.sh
 ```
 
-Output: `target/wasm32v1-none/release/agent_guard.wasm`
+Output: `target/wasm32v1-none/release/kakoro_guard.wasm`
 
 ## Deploy
 
@@ -30,7 +30,7 @@ Output: `target/wasm32v1-none/release/agent_guard.wasm`
 ./scripts/deploy-testnet.sh
 ```
 
-The script prints the contract ID. Save it as `AGENTGUARD_CONTRACT_ID` in `.env`. It also writes `scripts/.deployed-contract-id` (gitignored) if the deploy succeeds.
+The script prints the contract ID. Save it as `KAKOROGUARD_CONTRACT_ID` in `.env`. It also writes `scripts/.deployed-contract-id` (gitignored) if the deploy succeeds.
 
 If credentials are missing, the script exits with the exact remaining manual command.
 
@@ -38,7 +38,7 @@ If credentials are missing, the script exits with the exact remaining manual com
 
 ```bash
 stellar contract invoke \
-  --id "$AGENTGUARD_CONTRACT_ID" \
+  --id "$KAKOROGUARD_CONTRACT_ID" \
   --source-account "$STELLAR_IDENTITY" \
   --network testnet \
   -- \
@@ -52,14 +52,14 @@ stellar contract invoke \
 ./scripts/invoke-demo.sh
 ```
 
-Requires `AGENTGUARD_CONTRACT_ID` and `STELLAR_IDENTITY`. The script registers, queries, suspends, reactivates, revokes, then shows that a second reactivate fails.
+Requires `KAKOROGUARD_CONTRACT_ID` and `STELLAR_IDENTITY`. The script registers, queries, suspends, reactivates, revokes, then shows that a second reactivate fails.
 
 ## Manual invoke examples
 
 Replace `$OWNER` / `$AGENT` with G... addresses. Metadata is a Soroban map matching `AgentMetadata`.
 
 ```bash
-stellar contract invoke --id "$AGENTGUARD_CONTRACT_ID" --source-account "$STELLAR_IDENTITY" --network testnet -- \
+stellar contract invoke --id "$KAKOROGUARD_CONTRACT_ID" --source-account "$STELLAR_IDENTITY" --network testnet -- \
   get_owner_agents --owner "$OWNER"
 ```
 
@@ -68,9 +68,9 @@ stellar contract invoke --id "$AGENTGUARD_CONTRACT_ID" --source-account "$STELLA
 No Testnet contract ID is recorded in this repository. This environment has no Stellar CLI identity and no `.env`. Remaining manual steps:
 
 1. Install the Stellar CLI.
-2. `stellar keys generate agentguard-deployer --network testnet --fund` and fund it.
+2. `stellar keys generate kakoroguard-deployer --network testnet --fund` and fund it.
 3. Copy `.env.example` to `.env` and set `STELLAR_IDENTITY`.
 4. `./scripts/build-wasm.sh && ./scripts/deploy-testnet.sh`
 5. `initialize` then `./scripts/invoke-demo.sh`
 
-Local verification already performed: `cargo test --lib` (43 passed) and `cargo build --target wasm32v1-none --release -p agent-guard` succeeded. WASM path: `target/wasm32v1-none/release/agent_guard.wasm`.
+Local verification already performed: `cargo test --lib` (43 passed) and `cargo build --target wasm32v1-none --release -p kakoro-guard` succeeded. WASM path: `target/wasm32v1-none/release/kakoro_guard.wasm`.

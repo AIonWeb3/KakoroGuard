@@ -153,11 +153,11 @@ export function Verify() {
         <pre className="mt-4 overflow-x-auto rounded-xl bg-void p-4 font-mono text-[12px] text-mint/90">{mode === "resource" ? `POST /v1/resources/${resourceId || "settlement_api"}
 X-Agent-Public-Key: ${agentId || "G..."}
 
-→ AgentGuard.check_access(key, "${resourceId || "settlement_api"}", ${ROLE_LABELS[role]})
+→ KakoroGuard.check_access(key, "${resourceId || "settlement_api"}", ${ROLE_LABELS[role]})
 → 200 or 403` : `POST /v1/premium-data
 X-Agent-Public-Key: ${agentId || "G..."}
 
-→ AgentGuard.verify_agent(key, ${ROLE_LABELS[role]})
+→ KakoroGuard.verify_agent(key, ${ROLE_LABELS[role]})
 → 200 or 403`}</pre>
       </section>
     </main>
