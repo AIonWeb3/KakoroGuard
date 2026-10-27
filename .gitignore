@@ -20,3 +20,17 @@ examples/**/node_modules/
 # Local secrets for Stellar CLI (never commit)
 .env
 scripts/.deployed-contract-id
+
+# AgentGuard JS
+agentguard-js/node_modules/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+.mypy_cache/
+*.egg-info/
+build/
+
