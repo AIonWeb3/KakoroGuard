@@ -1,14 +1,14 @@
 /**
- * @agentguard/sdk
+ * @kakoroguard/sdk
  *
- * Identity and RBAC client for the AgentGuard Soroban contract.
+ * Identity and RBAC client for the KakoroGuard Soroban contract.
  *
  * @example
  * ```typescript
- * import { AgentGuardClient, Role } from "@agentguard/sdk";
+ * import { KakoroGuardClient, Role } from "@kakoroguard/sdk";
  * import { Networks } from "@stellar/stellar-sdk";
  *
- * const guard = new AgentGuardClient({
+ * const guard = new KakoroGuardClient({
  *   contractId: "CABC...XYZ",
  *   rpcUrl: "https://soroban-testnet.stellar.org",
  *   networkPassphrase: Networks.TESTNET,
@@ -19,12 +19,12 @@
  */
 
 export {
-  AgentGuardClient,
+  KakoroGuardClient,
   AgentUnauthorizedError,
   AgentPermissionDeniedError,
   SimulationError,
   TransactionError,
-} from "./agent-guard-client.js";
+} from "./kakoro-guard-client.js";
 export {
   Role,
   AgentStatus,
@@ -33,7 +33,7 @@ export {
   type AgentRecord,
   type AgentMetadata,
   type AgentProfile,
-  type AgentGuardConfig,
+  type KakoroGuardConfig,
   type TransactionSigner,
   type SubmittedTransaction,
   type Permission,

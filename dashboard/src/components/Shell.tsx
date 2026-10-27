@@ -21,7 +21,7 @@ export function Shell() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
           <NavLink to="/" className="flex items-center gap-2 text-mint">
             <BrandMark />
-            <span className="font-display text-lg tracking-tight text-ink">AgentGuard</span>
+            <span className="font-display text-lg tracking-tight text-ink">KakoroGuard</span>
           </NavLink>
           <nav className="hidden items-center gap-1 md:flex">
             {links.map((link) => (

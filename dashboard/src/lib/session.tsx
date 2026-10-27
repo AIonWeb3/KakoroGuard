@@ -42,8 +42,8 @@ interface SessionValue {
 }
 
 const SessionContext = createContext<SessionValue | null>(null);
-const OWNER_KEY = "agentguard.session.owner";
-const MODE_KEY = "agentguard.session.mode";
+const OWNER_KEY = "kakoroguard.session.owner";
+const MODE_KEY = "kakoroguard.session.mode";
 
 function readPersisted(): { owner: string | null; mode: SessionMode } {
   try {

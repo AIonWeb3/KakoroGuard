@@ -1,5 +1,5 @@
 {
-  "name": "@agentguard/provider-gateway-example",
+  "name": "@kakoroguard/provider-gateway-example",
   "private": true,
   "version": "0.1.0",
   "type": "module",

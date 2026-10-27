@@ -63,7 +63,7 @@ export function Landing() {
               <span className="block text-mint">an on-chain identity.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted">
-              AgentGuard is the authentication layer for autonomous agents. Register them under
+              KakoroGuard is the authentication layer for autonomous agents. Register them under
               a human owner, assign roles, and let APIs or settlement contracts verify access
               before a single dollar or secret moves.
             </p>
@@ -177,9 +177,9 @@ export function Landing() {
               </li>
             </ul>
           </div>
-          <pre className="overflow-x-auto rounded-2xl border border-line bg-void p-5 font-mono text-[12px] leading-6 text-mint/90">{`import { AgentGuardClient, Role } from "@agentguard/sdk";
+          <pre className="overflow-x-auto rounded-2xl border border-line bg-void p-5 font-mono text-[12px] leading-6 text-mint/90">{`import { KakoroGuardClient, Role } from "@kakoroguard/sdk";
 
-const guard = new AgentGuardClient({
+const guard = new KakoroGuardClient({
   contractId,
   rpcUrl,
   networkPassphrase,
@@ -216,7 +216,7 @@ app.post("/v1/premium", async (req, res) => {
       </section>
 
       <footer className="border-t border-line py-8 text-center text-xs text-muted">
-        AgentGuard · MIT · Stellar Soroban identity registry for autonomous agents
+        KakoroGuard · MIT · Stellar Soroban identity registry for autonomous agents
       </footer>
     </div>
   );

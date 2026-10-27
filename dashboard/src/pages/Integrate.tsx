@@ -13,11 +13,11 @@ export function Integrate() {
         <Block
           title="1. Resource provider middleware"
           body="The SDK simulates verify_agent. Attach it to any HTTP stack."
-          code={`import { AgentGuardClient, Role, requireRole } from "@agentguard/sdk";
+          code={`import { KakoroGuardClient, Role, requireRole } from "@kakoroguard/sdk";
 import { Networks } from "@stellar/stellar-sdk";
 
-const guard = new AgentGuardClient({
-  contractId: process.env.AGENTGUARD_ID,
+const guard = new KakoroGuardClient({
+  contractId: process.env.KAKOROGUARD_ID,
   rpcUrl: "https://soroban-testnet.stellar.org",
   networkPassphrase: Networks.TESTNET,
 });
@@ -27,7 +27,7 @@ app.post("/v1/settle", requireRole(guard, Role.Premium), handler);`}
         <Block
           title="2. Cross-contract check from AgentPay"
           body="No auth, no writes — cheap enough to run on every settlement."
-          code={`let guard = AgentGuardClient::new(&env, &agent_guard_id);
+          code={`let guard = KakoroGuardClient::new(&env, &kakoro_guard_id);
 if !guard.verify_agent(&agent_id, &Role::Premium) {
     panic!("agent not authorized for this tier");
 }

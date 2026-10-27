@@ -8,7 +8,7 @@ import {
   type VerifyResult,
 } from "./types";
 
-const STORAGE_KEY = "agentguard.demo.v1";
+const STORAGE_KEY = "kakoroguard.demo.v1";
 
 interface DemoState {
   owner: string;

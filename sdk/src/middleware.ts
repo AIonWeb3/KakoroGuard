@@ -1,15 +1,15 @@
 /**
- * Framework-agnostic helpers for gating HTTP routes on AgentGuard roles.
+ * Framework-agnostic helpers for gating HTTP routes on KakoroGuard roles.
  *
  * Works with Express, Fastify, Hono, Next.js route handlers — anything that
  * can read a request header and return a 401/403.
  */
 
 import {
-  AgentGuardClient,
+  KakoroGuardClient,
   AgentPermissionDeniedError,
   AgentUnauthorizedError,
-} from "./agent-guard-client.js";
+} from "./kakoro-guard-client.js";
 import { Role } from "./types.js";
 
 export const AGENT_HEADER = "x-agent-public-key";
@@ -36,7 +36,7 @@ function readHeader(req: GuardRequest, name: string): string | undefined {
  * Verify that the request presents an agent key that holds `role`.
  */
 export async function enforceAgentRole(
-  guard: AgentGuardClient,
+  guard: KakoroGuardClient,
   req: GuardRequest,
   role: Role,
   headerName: string = AGENT_HEADER
@@ -85,7 +85,7 @@ export async function enforceAgentRole(
  * app.post("/v1/settle", requireRole(guard, Role.Premium), handler);
  * ```
  */
-export function requireRole(guard: AgentGuardClient, role: Role) {
+export function requireRole(guard: KakoroGuardClient, role: Role) {
   return async (
     req: GuardRequest & { agentPublicKey?: string },
     res: { status: (code: number) => { json: (body: unknown) => unknown } },
@@ -104,7 +104,7 @@ export function requireRole(guard: AgentGuardClient, role: Role) {
  * Verify that the request presents an agent key with an unexpired role on `resourceId`.
  */
 export async function enforceAgentPermission(
-  guard: AgentGuardClient,
+  guard: KakoroGuardClient,
   req: GuardRequest,
   resourceId: string,
   role: Role,
@@ -154,7 +154,7 @@ export async function enforceAgentPermission(
  * app.post("/v1/datasets/finance", requirePermission(guard, "finance_data", Role.Premium), handler);
  * ```
  */
-export function requirePermission(guard: AgentGuardClient, resourceId: string, role: Role) {
+export function requirePermission(guard: KakoroGuardClient, resourceId: string, role: Role) {
   return async (
     req: GuardRequest & { agentPublicKey?: string },
     res: { status: (code: number) => { json: (body: unknown) => unknown } },

@@ -12,7 +12,7 @@ fi
 
 NETWORK="${STELLAR_NETWORK:-testnet}"
 IDENTITY="${STELLAR_IDENTITY:-}"
-WASM="$ROOT/target/wasm32v1-none/release/agent_guard.wasm"
+WASM="$ROOT/target/wasm32v1-none/release/kakoro_guard.wasm"
 
 if [[ ! -f "$WASM" ]]; then
   echo "WASM missing. Run ./scripts/build-wasm.sh first." >&2
@@ -26,8 +26,8 @@ STELLAR_IDENTITY is not set.
 Remaining manual step:
   1. Copy .env.example to .env
   2. Create and fund a CLI identity:
-       stellar keys generate agentguard-deployer --network testnet --fund
-  3. Set STELLAR_IDENTITY=agentguard-deployer in .env
+       stellar keys generate kakoroguard-deployer --network testnet --fund
+  3. Set STELLAR_IDENTITY=kakoroguard-deployer in .env
   4. Re-run ./scripts/deploy-testnet.sh
 
 Equivalent command:
@@ -44,4 +44,4 @@ fi
 echo "Deploying $WASM to $NETWORK as $IDENTITY..."
 CONTRACT_ID="$(stellar contract deploy --wasm "$WASM" --network "$NETWORK" --source-account "$IDENTITY")"
 echo "$CONTRACT_ID" | tee "$ROOT/scripts/.deployed-contract-id"
-echo "Set AGENTGUARD_CONTRACT_ID=$CONTRACT_ID in .env"
+echo "Set KAKOROGUARD_CONTRACT_ID=$CONTRACT_ID in .env"

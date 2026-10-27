@@ -21,8 +21,8 @@ examples/**/node_modules/
 .env
 scripts/.deployed-contract-id
 
-# AgentGuard JS
-agentguard-js/node_modules/
+# KakoroGuard JS
+kakoroguard-js/node_modules/
 
 # Python artifacts
 __pycache__/

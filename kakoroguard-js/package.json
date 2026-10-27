@@ -1,0 +1,43 @@
+{
+  "name": "kakoroguard-js",
+  "version": "0.1.0",
+  "description": "KakoroGuard TypeScript SDK for Web2 Resource Providers: Signature Verification & Soroban Contract RBAC",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json && node -e \"const fs=require('fs'); fs.writeFileSync('dist/cjs/package.json', JSON.stringify({type:'commonjs'}));\"",
+    "build": "npm run build:esm && npm run build:cjs",
+    "test": "node --test --experimental-strip-types --experimental-test-coverage tests/errors.test.ts tests/verifier.test.ts tests/contract.test.ts tests/middleware.test.ts tests/interop.test.ts",
+    "clean": "node -e \"const fs=require('fs'); fs.rmSync('dist', {recursive:true, force:true})\""
+  },
+  "keywords": [
+    "stellar",
+    "soroban",
+    "kakoroguard",
+    "rbac",
+    "ai",
+    "ed25519",
+    "security"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@stellar/stellar-sdk": "^13.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}
