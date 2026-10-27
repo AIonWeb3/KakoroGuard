@@ -1009,7 +1009,7 @@ fn test_grant_permission_emits_event() {
     let resource = sample_resource(&env);
     client.register_agent(&owner, &agent, &sample_metadata(&env, "RBAC"));
     client.grant_permission(&owner, &agent, &resource, &Role::Admin, &future_expiry(&env));
-    assert!(!env.events().all().events().is_empty());
+    assert_ne!(env.events().all().events(), []);
 }
 
 #[test]
@@ -1060,7 +1060,7 @@ fn test_revoke_permission_emits_event() {
     client.register_agent(&owner, &agent, &sample_metadata(&env, "RBAC"));
     client.grant_permission(&owner, &agent, &resource, &Role::Premium, &future_expiry(&env));
     client.revoke_permission(&owner, &agent, &resource, &Role::Premium);
-    assert!(!env.events().all().events().is_empty());
+    assert_ne!(env.events().all().events(), []);
 }
 
 #[test]
