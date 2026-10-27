@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button, Field, Modal, RolePill, StatusBadge, inputClass } from "../components/ui";
 import { formatTime, shortAddress } from "../lib/format";
 import { useSession } from "../lib/session";
-import { ALL_ROLES, AgentStatus, STATUS_LABELS } from "../lib/types";
+import { ALL_ROLES, AgentStatus, Role, STATUS_LABELS } from "../lib/types";
 
 export function AgentDetail() {
   const { agentId = "" } = useParams();
@@ -12,6 +12,7 @@ export function AgentDetail() {
   const agent = session.agents.find((a) => a.agentId === agentId);
   const [editOpen, setEditOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [grantPermOpen, setGrantPermOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!session.owner) {
@@ -126,6 +127,55 @@ export function AgentDetail() {
         </div>
       </section>
 
+      <section className="mt-4 rounded-2xl border border-line p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-xs uppercase tracking-wider text-muted">Resource Permissions (Phase 2 RBAC)</h2>
+            <p className="mt-1 text-sm text-muted">
+              Time-bounded roles on specific resources. Evaluated with role hierarchy in check_access.
+            </p>
+          </div>
+          <Button variant="ghost" onClick={() => setGrantPermOpen(true)}>
+            + Grant permission
+          </Button>
+        </div>
+
+        {agent.permissions && agent.permissions.length > 0 ? (
+          <div className="mt-4 space-y-3">
+            {agent.permissions.map((perm) => {
+              const isExpired = perm.expiresAt <= Math.floor(Date.now() / 1000);
+              return (
+                <div
+                  key={`${perm.resourceId}-${perm.role}`}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line px-3 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-sm font-medium text-ink">{perm.resourceId}</span>
+                    <RolePill role={perm.role} />
+                    <span className={`text-xs ${isExpired ? "text-danger" : "text-muted"}`}>
+                      {isExpired ? "Expired: " : "Expires: "}
+                      {new Date(perm.expiresAt * 1000).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <Button
+                    variant="danger"
+                    onClick={() =>
+                      run(() =>
+                        session.revokePermission(agent.agentId, perm.resourceId, perm.role)
+                      )
+                    }
+                  >
+                    Revoke
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-muted">No resource permissions granted to this agent yet.</p>
+        )}
+      </section>
+
       <section className="mt-4 flex flex-wrap gap-2">
         <Link
           to={`/verify?agent=${agent.agentId}`}
@@ -169,6 +219,17 @@ export function AgentDetail() {
             session.transferOwnership(agent.agentId, next);
             setTransferOpen(false);
             navigate("/app");
+          }}
+        />
+      ) : null}
+
+      {grantPermOpen ? (
+        <GrantPermissionModal
+          onClose={() => setGrantPermOpen(false)}
+          onSubmit={(resId, role, days) => {
+            const expiresAt = Math.floor(Date.now() / 1000) + days * 86_400;
+            session.grantPermission(agent.agentId, resId, role, expiresAt);
+            setGrantPermOpen(false);
           }}
         />
       ) : null}
@@ -241,6 +302,62 @@ function TransferModal({
           onChange={(e) => setValue(e.target.value)}
           placeholder="G..."
           required
+        />
+      </Field>
+    </Modal>
+  );
+}
+
+function GrantPermissionModal({
+  onClose,
+  onSubmit,
+}: {
+  onClose: () => void;
+  onSubmit: (resourceId: string, role: Role, days: number) => void;
+}) {
+  const [resourceId, setResourceId] = useState("settlement_api");
+  const [role, setRole] = useState<Role>(1 as Role);
+  const [days, setDays] = useState(30);
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!resourceId.trim()) return;
+    onSubmit(resourceId.trim(), role, days);
+  };
+
+  return (
+    <Modal title="Grant resource permission" onClose={onClose} onSubmit={submit} submitLabel="Grant">
+      <Field label="Resource ID">
+        <input
+          className={inputClass}
+          value={resourceId}
+          onChange={(e) => setResourceId(e.target.value)}
+          placeholder="e.g. settlement_api, premium_data"
+          required
+        />
+      </Field>
+      <Field label="Role">
+        <div className="flex flex-wrap gap-2">
+          {ALL_ROLES.map((r) => (
+            <Button
+              key={r}
+              type="button"
+              variant={role === r ? "primary" : "ghost"}
+              onClick={() => setRole(r)}
+            >
+              {r === 2 ? "Admin" : r === 1 ? "Premium" : "Basic"}
+            </Button>
+          ))}
+        </div>
+      </Field>
+      <Field label="Validity (days)">
+        <input
+          className={inputClass}
+          type="number"
+          min={1}
+          max={365}
+          value={days}
+          onChange={(e) => setDays(Number(e.target.value) || 30)}
         />
       </Field>
     </Modal>

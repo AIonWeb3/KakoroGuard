@@ -34,6 +34,9 @@ pub enum DataKey {
 
     /// Resource permission keyed by agent, resource, and role. Always **persistent** (never temporary).
     Permission(PermissionKey),
+
+    /// Agent `Address` → `Vec<PermissionKey>` of granted resource permissions. **Persistent.**
+    AgentPermissions(Address),
 }
 
 pub fn write_metadata(env: &Env, agent_id: Address, metadata: &AgentMetadata) {
@@ -160,4 +163,46 @@ pub fn write_permission(env: &Env, agent_id: Address, permission: &Permission) {
     let key = permission_storage_key(agent_id, permission.resource_id.clone(), permission.role);
     env.storage().persistent().set(&key, permission);
     env.storage().persistent().extend_ttl(&key, TTL_THRESHOLD, TTL_EXTEND_TO);
+}
+
+pub fn read_agent_permissions(env: &Env, agent_id: Address) -> Vec<PermissionKey> {
+    let key = DataKey::AgentPermissions(agent_id);
+    env.storage().persistent().get(&key).unwrap_or(Vec::new(env))
+}
+
+pub fn write_agent_permissions(env: &Env, agent_id: Address, list: &Vec<PermissionKey>) {
+    let key = DataKey::AgentPermissions(agent_id);
+    if list.is_empty() {
+        env.storage().persistent().remove(&key);
+    } else {
+        env.storage().persistent().set(&key, list);
+        env.storage().persistent().extend_ttl(&key, TTL_THRESHOLD, TTL_EXTEND_TO);
+    }
+}
+
+pub fn add_agent_permission(env: &Env, agent_id: Address, key: PermissionKey) {
+    let mut list = read_agent_permissions(env, agent_id.clone());
+    for existing in list.iter() {
+        if existing == key {
+            return;
+        }
+    }
+    list.push_back(key);
+    write_agent_permissions(env, agent_id, &list);
+}
+
+pub fn remove_agent_permission(env: &Env, agent_id: Address, target: &PermissionKey) {
+    let list = read_agent_permissions(env, agent_id.clone());
+    let mut next = Vec::new(env);
+    for existing in list.iter() {
+        if existing != *target {
+            next.push_back(existing);
+        }
+    }
+    write_agent_permissions(env, agent_id, &next);
+}
+
+pub fn clear_agent_permissions(env: &Env, agent_id: Address) {
+    let key = DataKey::AgentPermissions(agent_id);
+    env.storage().persistent().remove(&key);
 }

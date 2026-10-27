@@ -10,6 +10,8 @@ export function Verify() {
   const session = useSession();
   const [params] = useSearchParams();
   const [agentId, setAgentId] = useState(params.get("agent") ?? "");
+  const [mode, setMode] = useState<"global" | "resource">("global");
+  const [resourceId, setResourceId] = useState("settlement_api");
   const [role, setRole] = useState<Role>(Role.Premium);
   const [result, setResult] = useState<VerifyResult | null>(null);
 
@@ -18,7 +20,11 @@ export function Verify() {
   const run = () => {
     const owner = session.owner ?? DEMO_OWNER;
     if (!session.owner) session.enterDemo();
-    setResult(demoRegistry.verify(owner, agentId.trim(), role));
+    if (mode === "resource") {
+      setResult(demoRegistry.checkAccess(owner, agentId.trim(), resourceId.trim(), role));
+    } else {
+      setResult(demoRegistry.verify(owner, agentId.trim(), role));
+    }
   };
 
   return (
@@ -26,9 +32,9 @@ export function Verify() {
       <p className="text-xs uppercase tracking-[0.2em] text-mint">Resource provider simulation</p>
       <h1 className="mt-2 font-display text-4xl">Verify before you serve</h1>
       <p className="mt-3 max-w-2xl text-muted">
-        This is what an API gateway or AgentPay settlement call does: a fee-less read of
-        <span className="text-ink"> verify_agent</span>. Try Treasury Agent with Premium (pass),
-        then suspend it on the detail page and run the same check (fail).
+        Simulate an API gateway or settlement check: pure fee-less reads. Test global roles via
+        <span className="text-ink"> verify_agent</span> or resource-scoped permissions via
+        <span className="text-ink"> check_access</span> (with full role hierarchy).
       </p>
 
       {!session.owner ? (
@@ -41,6 +47,31 @@ export function Verify() {
       ) : null}
 
       <div className="mt-8 space-y-4 rounded-2xl border border-line bg-panel/40 p-5">
+        <Field label="Verification Check">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={mode === "global" ? "primary" : "ghost"}
+              onClick={() => {
+                setMode("global");
+                setResult(null);
+              }}
+            >
+              Global Role (verify_agent)
+            </Button>
+            <Button
+              type="button"
+              variant={mode === "resource" ? "primary" : "ghost"}
+              onClick={() => {
+                setMode("resource");
+                setResult(null);
+              }}
+            >
+              Resource Permission (check_access)
+            </Button>
+          </div>
+        </Field>
+
         <Field label="Agent public key">
           <input
             className={inputClass}
@@ -63,6 +94,18 @@ export function Verify() {
             ))}
           </div>
         ) : null}
+
+        {mode === "resource" ? (
+          <Field label="Resource ID">
+            <input
+              className={inputClass}
+              value={resourceId}
+              onChange={(e) => setResourceId(e.target.value)}
+              placeholder="e.g. settlement_api, fleet_ops"
+            />
+          </Field>
+        ) : null}
+
         <Field label="Required role">
           <div className="flex flex-wrap gap-2">
             {ALL_ROLES.map((item) => (
@@ -72,8 +115,8 @@ export function Verify() {
             ))}
           </div>
         </Field>
-        <Button onClick={run} disabled={!agentId.trim()}>
-          Call verify_agent
+        <Button onClick={run} disabled={!agentId.trim() || (mode === "resource" && !resourceId.trim())}>
+          {mode === "resource" ? "Call check_access" : "Call verify_agent"}
         </Button>
       </div>
 
@@ -107,10 +150,14 @@ export function Verify() {
           Agents present <code className="text-ink">X-Agent-Public-Key</code>. Your backend simulates
           the Soroban call. No signature, no fee, fail closed.
         </p>
-        <pre className="mt-4 overflow-x-auto rounded-xl bg-void p-4 font-mono text-[12px] text-mint/90">{`POST /v1/premium-data
+        <pre className="mt-4 overflow-x-auto rounded-xl bg-void p-4 font-mono text-[12px] text-mint/90">{mode === "resource" ? `POST /v1/resources/${resourceId || "settlement_api"}
 X-Agent-Public-Key: ${agentId || "G..."}
 
-→ AgentGuard.verify_agent(key, Premium)
+→ AgentGuard.check_access(key, "${resourceId || "settlement_api"}", ${ROLE_LABELS[role]})
+→ 200 or 403` : `POST /v1/premium-data
+X-Agent-Public-Key: ${agentId || "G..."}
+
+→ AgentGuard.verify_agent(key, ${ROLE_LABELS[role]})
 → 200 or 403`}</pre>
       </section>
     </main>

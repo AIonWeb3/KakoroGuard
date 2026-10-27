@@ -44,6 +44,24 @@ export class AgentUnauthorizedError extends Error {
   }
 }
 
+export class AgentPermissionDeniedError extends Error {
+  public readonly agentPublicKey: string;
+  public readonly resourceId: string;
+  public readonly requiredRole: Role;
+
+  constructor(agentPublicKey: string, resourceId: string, requiredRole: Role) {
+    const roleName = Role[requiredRole] ?? `Unknown(${requiredRole})`;
+    super(
+      `Agent ${agentPublicKey} is not authorized for role "${roleName}" on resource "${resourceId}". ` +
+        `The agent either does not exist on-chain, is not Active, or lacks an unexpired permission.`
+    );
+    this.name = "AgentPermissionDeniedError";
+    this.agentPublicKey = agentPublicKey;
+    this.resourceId = resourceId;
+    this.requiredRole = requiredRole;
+  }
+}
+
 export class SimulationError extends Error {
   constructor(message: string) {
     super(message);
@@ -60,6 +78,14 @@ export class TransactionError extends Error {
 
 function roleToScVal(role: Role): xdr.ScVal {
   return nativeToScVal(role, { type: "u32" });
+}
+
+function symbolToScVal(symbol: string): xdr.ScVal {
+  return nativeToScVal(symbol, { type: "symbol" });
+}
+
+function u64ToScVal(val: number | bigint): xdr.ScVal {
+  return nativeToScVal(BigInt(val), { type: "u64" });
 }
 
 function statusToScVal(status: AgentStatus): xdr.ScVal {
@@ -161,6 +187,30 @@ export class AgentGuardClient {
     const authorized = await this.verifyAgent(agentPublicKey, requiredRole);
     if (!authorized) {
       throw new AgentUnauthorizedError(agentPublicKey, requiredRole);
+    }
+  }
+
+  async checkAccess(
+    agentPublicKey: string,
+    resourceId: string,
+    requiredRole: Role
+  ): Promise<boolean> {
+    const result = await this.simulateCall("check_access", [
+      addressToScVal(agentPublicKey),
+      symbolToScVal(resourceId),
+      roleToScVal(requiredRole),
+    ]);
+    return scValToNative(result) as boolean;
+  }
+
+  async requireAccess(
+    agentPublicKey: string,
+    resourceId: string,
+    requiredRole: Role
+  ): Promise<void> {
+    const authorized = await this.checkAccess(agentPublicKey, resourceId, requiredRole);
+    if (!authorized) {
+      throw new AgentPermissionDeniedError(agentPublicKey, resourceId, requiredRole);
     }
   }
 
@@ -269,6 +319,48 @@ export class AgentGuardClient {
       owner,
       "revoke_role",
       [addressToScVal(owner), addressToScVal(agentId), roleToScVal(role)],
+      signer
+    );
+  }
+
+  async grantPermission(
+    owner: string,
+    agentId: string,
+    resourceId: string,
+    role: Role,
+    expiresAt: number | bigint,
+    signer: TransactionSigner
+  ): Promise<SubmittedTransaction> {
+    return this.submit(
+      owner,
+      "grant_permission",
+      [
+        addressToScVal(owner),
+        addressToScVal(agentId),
+        symbolToScVal(resourceId),
+        roleToScVal(role),
+        u64ToScVal(expiresAt),
+      ],
+      signer
+    );
+  }
+
+  async revokePermission(
+    owner: string,
+    agentId: string,
+    resourceId: string,
+    role: Role,
+    signer: TransactionSigner
+  ): Promise<SubmittedTransaction> {
+    return this.submit(
+      owner,
+      "revoke_permission",
+      [
+        addressToScVal(owner),
+        addressToScVal(agentId),
+        symbolToScVal(resourceId),
+        roleToScVal(role),
+      ],
       signer
     );
   }

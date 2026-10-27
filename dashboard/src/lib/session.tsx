@@ -35,6 +35,9 @@ interface SessionValue {
   transferOwnership: (agentId: string, newOwner: string) => void;
   deregister: (agentId: string) => void;
   verify: (agentId: string, role: Role) => VerifyResult;
+  grantPermission: (agentId: string, resourceId: string, role: Role, expiresAt: number) => void;
+  revokePermission: (agentId: string, resourceId: string, role: Role) => void;
+  checkAccess: (agentId: string, resourceId: string, role: Role) => VerifyResult;
   mintAgentKey: () => string;
 }
 
@@ -152,6 +155,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       refresh();
     },
     verify: (agentId, role) => demoRegistry.verify(requireOwner(), agentId, role),
+    grantPermission: (agentId, resourceId, role, expiresAt) => {
+      demoRegistry.grantPermission(requireOwner(), agentId, resourceId, role, expiresAt);
+      refresh();
+    },
+    revokePermission: (agentId, resourceId, role) => {
+      demoRegistry.revokePermission(requireOwner(), agentId, resourceId, role);
+      refresh();
+    },
+    checkAccess: (agentId, resourceId, role) =>
+      demoRegistry.checkAccess(requireOwner(), agentId, resourceId, role),
     mintAgentKey: randomAgentId,
   };
 

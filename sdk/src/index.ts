@@ -21,6 +21,7 @@
 export {
   AgentGuardClient,
   AgentUnauthorizedError,
+  AgentPermissionDeniedError,
   SimulationError,
   TransactionError,
 } from "./agent-guard-client.js";
@@ -35,11 +36,14 @@ export {
   type AgentGuardConfig,
   type TransactionSigner,
   type SubmittedTransaction,
+  type Permission,
 } from "./types.js";
 export {
   AGENT_HEADER,
   enforceAgentRole,
+  enforceAgentPermission,
   requireRole,
+  requirePermission,
   type GuardRequest,
   type GuardFailure,
   type GuardResult,

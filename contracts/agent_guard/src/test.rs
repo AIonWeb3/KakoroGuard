@@ -1166,3 +1166,62 @@ fn test_e2e_grant_then_expire() {
     env.ledger().set_timestamp(expires_at.saturating_add(1));
     assert!(!client.check_access(&agent, &resource, &Role::Admin));
 }
+
+#[test]
+fn test_check_access_respects_role_hierarchy() {
+    let (env, client, _admin) = setup();
+    let owner = Address::generate(&env);
+    let agent = Address::generate(&env);
+    let resource = sample_resource(&env);
+    client.register_agent(&owner, &agent, &sample_metadata(&env, "Hierarchy"));
+
+    // Grant Admin permission on resource
+    client.grant_permission(&owner, &agent, &resource, &Role::Admin, &future_expiry(&env));
+
+    // Admin should satisfy Admin, Premium, and Basic
+    assert!(client.check_access(&agent, &resource, &Role::Admin));
+    assert!(client.check_access(&agent, &resource, &Role::Premium));
+    assert!(client.check_access(&agent, &resource, &Role::Basic));
+}
+
+#[test]
+fn test_check_access_premium_does_not_satisfy_admin() {
+    let (env, client, _admin) = setup();
+    let owner = Address::generate(&env);
+    let agent = Address::generate(&env);
+    let resource = sample_resource(&env);
+    client.register_agent(&owner, &agent, &sample_metadata(&env, "PremiumOnly"));
+
+    client.grant_permission(&owner, &agent, &resource, &Role::Premium, &future_expiry(&env));
+
+    // Premium satisfies Premium and Basic, but NOT Admin
+    assert!(!client.check_access(&agent, &resource, &Role::Admin));
+    assert!(client.check_access(&agent, &resource, &Role::Premium));
+    assert!(client.check_access(&agent, &resource, &Role::Basic));
+}
+
+#[test]
+fn test_deregister_agent_cleans_up_orphaned_permissions() {
+    let (env, client, _admin) = setup();
+    let owner = Address::generate(&env);
+    let agent = Address::generate(&env);
+    let resource = sample_resource(&env);
+    client.register_agent(&owner, &agent, &sample_metadata(&env, "DeregCleanup"));
+
+    // Grant permission
+    client.grant_permission(&owner, &agent, &resource, &Role::Premium, &future_expiry(&env));
+    assert!(client.check_access(&agent, &resource, &Role::Premium));
+
+    // Deregister the agent
+    client.deregister_agent(&owner, &agent);
+
+    // Permission in persistent storage should have been cleared
+    let has_perm = env.as_contract(&client.address, || {
+        crate::storage::has_permission(&env, agent.clone(), resource.clone(), Role::Premium)
+    });
+    assert!(!has_perm);
+
+    // If agent address is re-registered, no old permissions should linger
+    client.register_agent(&owner, &agent, &sample_metadata(&env, "ReRegistered"));
+    assert!(!client.check_access(&agent, &resource, &Role::Premium));
+}

@@ -65,4 +65,12 @@ stellar contract invoke --id "$AGENTGUARD_CONTRACT_ID" --source-account "$STELLA
 
 ## Contract ID
 
-No Testnet contract ID is recorded in this repository unless a deploy in this environment actually succeeded. See the final verification notes in the README after a real deploy.
+No Testnet contract ID is recorded in this repository. This environment has no Stellar CLI identity and no `.env`. Remaining manual steps:
+
+1. Install the Stellar CLI.
+2. `stellar keys generate agentguard-deployer --network testnet --fund` and fund it.
+3. Copy `.env.example` to `.env` and set `STELLAR_IDENTITY`.
+4. `./scripts/build-wasm.sh && ./scripts/deploy-testnet.sh`
+5. `initialize` then `./scripts/invoke-demo.sh`
+
+Local verification already performed: `cargo test --lib` (43 passed) and `cargo build --target wasm32v1-none --release -p agent-guard` succeeded. WASM path: `target/wasm32v1-none/release/agent_guard.wasm`.
