@@ -38,7 +38,9 @@ use crate::events::{
     RoleRevoked, StatusChanged,
 };
 use crate::storage::{self, DataKey, TTL_EXTEND_TO, TTL_THRESHOLD};
-use crate::types::{AgentMetadata, AgentRecord, AgentStatus, Permission, ResourceId, Role};
+use crate::types::{
+    AgentMetadata, AgentRecord, AgentStatus, Permission, PermissionKey, ResourceId, Role,
+};
 use soroban_sdk::{contract, contractimpl, Address, Env, Vec};
 
 // ---------------------------------------------------------------------------
@@ -154,6 +156,13 @@ impl AgentGuardContract {
         // Remove from owner's agent list
         storage::remove_owner_agent(&env, owner.clone(), agent_id.clone());
 
+        // Remove all granted resource permissions to avoid orphaned storage
+        let permissions = storage::read_agent_permissions(&env, agent_id.clone());
+        for perm_key in permissions.iter() {
+            storage::delete_permission(&env, agent_id.clone(), perm_key.resource_id, perm_key.role);
+        }
+        storage::clear_agent_permissions(&env, agent_id.clone());
+
         AgentDeregistered { agent_id, owner }.publish(&env);
 
         Ok(())
@@ -261,6 +270,11 @@ impl AgentGuardContract {
         let _record = Self::load_owned_agent_for_rbac(&env, &owner, agent_id.clone())?;
         let permission = Permission::new(role, resource_id.clone(), expires_at);
         storage::write_permission(&env, agent_id.clone(), &permission);
+        storage::add_agent_permission(
+            &env,
+            agent_id.clone(),
+            PermissionKey::new(agent_id.clone(), resource_id.clone(), role),
+        );
         ResourceRoleGranted { agent_id, resource_id, owner, role, expires_at }.publish(&env);
         Ok(())
     }
@@ -285,25 +299,48 @@ impl AgentGuardContract {
             return Err(Error::RoleNotFound);
         }
         storage::delete_permission(&env, agent_id.clone(), resource_id.clone(), role);
+        storage::remove_agent_permission(
+            &env,
+            agent_id.clone(),
+            &PermissionKey::new(agent_id.clone(), resource_id.clone(), role),
+        );
         ResourceRoleRevoked { agent_id, resource_id, owner, role }.publish(&env);
         Ok(())
     }
 
-    /// Whether the agent is Active and holds an unexpired role on `resource_id`.
+    /// Whether the agent is Active and holds an unexpired role on `resource_id`
+    /// satisfying `required_role` according to the role hierarchy (`Admin >= Premium >= Basic`).
     ///
-    /// Pure read: no auth, no TTL bump, at most one agent read and one permission read.
+    /// Pure read: no auth, no TTL bump, at most one agent read and candidate permission reads.
     #[must_use]
-    pub fn check_access(env: Env, agent_id: Address, resource_id: ResourceId, role: Role) -> bool {
+    pub fn check_access(
+        env: Env,
+        agent_id: Address,
+        resource_id: ResourceId,
+        required_role: Role,
+    ) -> bool {
         let Ok(record) = storage::read_agent(&env, agent_id.clone()) else {
             return false;
         };
         if record.status != AgentStatus::Active {
             return false;
         }
-        let Ok(permission) = storage::read_permission(&env, agent_id, resource_id, role) else {
-            return false;
+        let now = storage::ledger_timestamp(&env);
+        let candidates: &[Role] = match required_role {
+            Role::Admin => &[Role::Admin],
+            Role::Premium => &[Role::Admin, Role::Premium],
+            Role::Basic => &[Role::Admin, Role::Premium, Role::Basic],
         };
-        !permission.is_expired(storage::ledger_timestamp(&env))
+        for &candidate in candidates {
+            if let Ok(permission) =
+                storage::read_permission(&env, agent_id.clone(), resource_id.clone(), candidate)
+            {
+                if !permission.is_expired(now) {
+                    return true;
+                }
+            }
+        }
+        false
     }
 
     // =======================================================================

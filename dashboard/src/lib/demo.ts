@@ -61,6 +61,13 @@ function seed(owner: string): DemoState {
         description: "Moves funds within policy after AgentPay settlement checks.",
         version: 2,
       },
+      permissions: [
+        {
+          resourceId: "settlement_api",
+          role: Role.Premium,
+          expiresAt: now() + 86_400 * 30,
+        },
+      ],
     },
     [ops]: {
       agentId: ops,
@@ -73,6 +80,13 @@ function seed(owner: string): DemoState {
         description: "Fleet operator. Satisfies Premium and Basic via role hierarchy.",
         version: 1,
       },
+      permissions: [
+        {
+          resourceId: "fleet_ops",
+          role: Role.Admin,
+          expiresAt: now() + 86_400 * 30,
+        },
+      ],
     },
     [scraper]: {
       agentId: scraper,
@@ -261,6 +275,127 @@ export const demoRegistry = {
       authorized: true,
       reason: `Active agent holds a role ≥ ${roleLabel(required)}.`,
       profile,
+    };
+  },
+
+  grantPermission(
+    owner: string,
+    agentId: string,
+    resourceId: string,
+    role: Role,
+    expiresAt: number
+  ): void {
+    const state = load(owner);
+    const agent = state.agents[agentId];
+    if (!agent) throw new Error("Agent not found");
+    if (agent.owner !== owner) throw new Error("Not the agent owner");
+    if (!agent.permissions) agent.permissions = [];
+    const idx = agent.permissions.findIndex(
+      (p) => p.resourceId === resourceId && p.role === role
+    );
+    if (idx >= 0) {
+      agent.permissions[idx].expiresAt = expiresAt;
+    } else {
+      agent.permissions.push({ resourceId, role, expiresAt });
+    }
+    push(
+      state,
+      activity(
+        "grant_permission",
+        `Granted ${resourceId} (${roleLabel(role)}) until ${new Date(expiresAt * 1000).toLocaleDateString()}`,
+        agentId
+      )
+    );
+    save(state);
+  },
+
+  revokePermission(
+    owner: string,
+    agentId: string,
+    resourceId: string,
+    role: Role
+  ): void {
+    const state = load(owner);
+    const agent = state.agents[agentId];
+    if (!agent) throw new Error("Agent not found");
+    if (agent.owner !== owner) throw new Error("Not the agent owner");
+    if (!agent.permissions) agent.permissions = [];
+    agent.permissions = agent.permissions.filter(
+      (p) => !(p.resourceId === resourceId && p.role === role)
+    );
+    push(
+      state,
+      activity(
+        "revoke_permission",
+        `Revoked ${resourceId} (${roleLabel(role)})`,
+        agentId
+      )
+    );
+    save(state);
+  },
+
+  checkAccess(
+    owner: string,
+    agentId: string,
+    resourceId: string,
+    requiredRole: Role
+  ): VerifyResult {
+    const state = load(owner);
+    const profile = state.agents[agentId] ?? null;
+    if (!profile) {
+      return {
+        authorized: false,
+        reason: "Agent is not registered in the registry.",
+        profile: null,
+        resourceId,
+      };
+    }
+    if (profile.status !== AgentStatus.Active) {
+      return {
+        authorized: false,
+        reason: `Agent is ${statusLabel(profile.status)} — check_access fails until it is Active.`,
+        profile,
+        resourceId,
+      };
+    }
+    const currentTime = now();
+    const permissions = profile.permissions ?? [];
+    const candidates =
+      requiredRole === Role.Admin
+        ? [Role.Admin]
+        : requiredRole === Role.Premium
+          ? [Role.Admin, Role.Premium]
+          : [Role.Admin, Role.Premium, Role.Basic];
+
+    for (const candidate of candidates) {
+      const match = permissions.find(
+        (p) => p.resourceId === resourceId && p.role === candidate
+      );
+      if (match) {
+        if (match.expiresAt <= currentTime) {
+          return {
+            authorized: false,
+            reason: `Permission on ${resourceId} (${roleLabel(candidate)}) expired at ${new Date(match.expiresAt * 1000).toLocaleString()}.`,
+            profile,
+            resourceId,
+            expiresAt: match.expiresAt,
+          };
+        }
+        return {
+          authorized: true,
+          reason: `Active agent holds valid role ${roleLabel(candidate)} on ${resourceId} (satisfies ≥ ${roleLabel(requiredRole)}).`,
+          profile,
+          resourceId,
+          expiresAt: match.expiresAt,
+        };
+      }
+    }
+
+    return {
+      authorized: false,
+      reason: `Agent has no unexpired role ≥ ${roleLabel(requiredRole)} on resource "${resourceId}".`,
+      profile,
+      resourceId,
     };
   },
 };

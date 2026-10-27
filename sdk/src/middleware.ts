@@ -5,7 +5,11 @@
  * can read a request header and return a 401/403.
  */
 
-import { AgentGuardClient, AgentUnauthorizedError } from "./agent-guard-client.js";
+import {
+  AgentGuardClient,
+  AgentPermissionDeniedError,
+  AgentUnauthorizedError,
+} from "./agent-guard-client.js";
 import { Role } from "./types.js";
 
 export const AGENT_HEADER = "x-agent-public-key";
@@ -88,6 +92,75 @@ export function requireRole(guard: AgentGuardClient, role: Role) {
     next: (err?: unknown) => void
   ) => {
     const result = await enforceAgentRole(guard, req, role);
+    if (!result.ok) {
+      return res.status(result.failure.status).json({ error: result.failure.error });
+    }
+    req.agentPublicKey = result.agentPublicKey;
+    next();
+  };
+}
+
+/**
+ * Verify that the request presents an agent key with an unexpired role on `resourceId`.
+ */
+export async function enforceAgentPermission(
+  guard: AgentGuardClient,
+  req: GuardRequest,
+  resourceId: string,
+  role: Role,
+  headerName: string = AGENT_HEADER
+): Promise<GuardResult> {
+  const agentPublicKey = readHeader(req, headerName)?.trim();
+  if (!agentPublicKey) {
+    return {
+      ok: false,
+      failure: {
+        status: 401,
+        error: `Missing ${headerName} header`,
+        code: "missing_agent_key",
+      },
+    };
+  }
+
+  try {
+    await guard.requireAccess(agentPublicKey, resourceId, role);
+    return { ok: true, agentPublicKey };
+  } catch (error) {
+    if (error instanceof AgentPermissionDeniedError) {
+      return {
+        ok: false,
+        failure: {
+          status: 403,
+          error: error.message,
+          code: "unauthorized",
+        },
+      };
+    }
+    return {
+      ok: false,
+      failure: {
+        status: 500,
+        error: "Verification service unavailable",
+        code: "verification_unavailable",
+      },
+    };
+  }
+}
+
+/**
+ * Express-style middleware factory for resource-scoped access checks.
+ *
+ * ```ts
+ * app.post("/v1/datasets/finance", requirePermission(guard, "finance_data", Role.Premium), handler);
+ * ```
+ */
+export function requirePermission(guard: AgentGuardClient, resourceId: string, role: Role) {
+  return async (
+    req: GuardRequest & { agentPublicKey?: string },
+    res: { status: (code: number) => { json: (body: unknown) => unknown } },
+    next: (err?: unknown) => void
+  ) => {
+    const result = await enforceAgentPermission(guard, req, resourceId, role);
     if (!result.ok) {
       return res.status(result.failure.status).json({ error: result.failure.error });
     }

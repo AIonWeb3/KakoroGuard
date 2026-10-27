@@ -96,3 +96,12 @@ export interface SubmittedTransaction {
   hash: string;
   status: string;
 }
+
+/**
+ * Time-bounded role grant on a specific resource (Phase 2 RBAC).
+ */
+export interface Permission {
+  role: Role;
+  resourceId: string;
+  expiresAt: number;
+}

@@ -39,9 +39,16 @@ export interface AgentRecord {
   registeredAt: number;
 }
 
+export interface Permission {
+  resourceId: string;
+  role: Role;
+  expiresAt: number;
+}
+
 export interface AgentProfile extends AgentRecord {
   agentId: string;
   metadata: AgentMetadata;
+  permissions?: Permission[];
 }
 
 export interface Activity {
@@ -56,6 +63,8 @@ export interface VerifyResult {
   authorized: boolean;
   reason: string;
   profile: AgentProfile | null;
+  resourceId?: string;
+  expiresAt?: number;
 }
 
 export const ALL_ROLES: Role[] = [Role.Basic, Role.Premium, Role.Admin];
