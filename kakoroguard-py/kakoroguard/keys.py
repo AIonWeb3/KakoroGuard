@@ -206,6 +206,28 @@ class AgentKeypair:
                 f"Error during signature verification: {exc}"
             ) from exc
 
+    def attach_payment(
+        self,
+        cost: str,
+        asset: str = "XLM",
+        payload: object = None,
+        max_fee: int = 100_000,
+        destination: str | None = None,
+        timestamp: int | None = None,
+    ) -> object:
+        """Attach payment intent and sign synergistic payload with this keypair."""
+        from kakoroguard.signer import attach_payment as _attach_payment
+
+        return _attach_payment(
+            cost=cost,
+            asset=asset,
+            payload=payload,
+            keypair=self,
+            max_fee=max_fee,
+            destination=destination,
+            timestamp=timestamp,
+        )
+
     def __repr__(self) -> str:
         status = "signing" if self.can_sign else "public-only"
         return f"<AgentKeypair public_key='{self.public_key}' mode='{status}'>"

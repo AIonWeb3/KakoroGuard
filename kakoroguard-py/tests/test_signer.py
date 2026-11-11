@@ -13,6 +13,8 @@ from kakoroguard.keys import AgentKeypair
 from kakoroguard.schema import AgentRequestPayload, PaymentIntent
 from kakoroguard.signer import (
     AgentAuthHeader,
+    AgentSigner,
+    attach_payment,
     build_signing_message,
     build_synergistic_signing_message,
     canonicalize_payload,
@@ -212,4 +214,48 @@ def test_synergistic_serialization_and_hashing() -> None:
     # Test signing message
     msg = build_synergistic_signing_message(h, timestamp=1700000000000)
     assert msg.startswith(b"1700000000000.")
+
+
+def test_agent_signer_and_attach_payment() -> None:
+    kp = AgentKeypair.generate()
+    signer = AgentSigner(kp)
+
+    req = signer.attach_payment(
+        cost="5_XLM",
+        asset="XLM",
+        payload={"task": "analytics"},
+        max_fee=50_000,
+        destination="GDEST456",
+        timestamp=1700000000000,
+    )
+
+    assert req.agent_id == kp.public_key
+    assert req.timestamp == 1700000000000
+    assert req.payment_intent.amount == "5_XLM"
+    assert req.payment_intent.asset == "XLM"
+    assert req.payment_intent.destination == "GDEST456"
+    assert req.payment_intent.max_fee == 50_000
+    assert req.payload == {"task": "analytics"}
+    assert len(req.signature) == 128
+
+    # Verify signature
+    canonical = serialize_synergistic_payload(req)
+    msg = build_signing_message(canonical, req.timestamp)
+    assert kp.verify(msg, bytes.fromhex(req.signature)) is True
+
+    # Test headers
+    headers = req.to_headers()
+    assert headers["x-agent-public-key"] == kp.public_key
+    assert headers["x-agent-payment-amount"] == "5_XLM"
+    assert headers["x-agent-payment-destination"] == "GDEST456"
+    assert "KakoroGuard" in headers["authorization"]
+
+    # Test keypair.attach_payment convenience method
+    req2 = kp.attach_payment(cost="10_XLM", payload={"hello": "world"})
+    assert req2.payment_intent.amount == "10_XLM"  # type: ignore[attr-defined]
+
+    # Test standalone attach_payment without keypair (generates new)
+    req3 = attach_payment(cost="2_XLM")
+    assert req3.payment_intent.amount == "2_XLM"
+
 

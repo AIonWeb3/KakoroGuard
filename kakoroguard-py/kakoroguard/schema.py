@@ -49,3 +49,25 @@ class AgentRequestPayload(BaseModel):
     @property
     def public_key(self) -> str:
         return self.agent_id
+
+    def to_headers(self) -> dict[str, str]:
+        """Generate standardized HTTP request headers including AgentPay intent."""
+        headers: dict[str, str] = {
+            "x-agent-public-key": self.agent_id,
+            "x-agent-timestamp": str(self.timestamp),
+            "x-agent-signature": self.signature,
+            "x-agent-payment-amount": self.payment_intent.amount,
+            "x-agent-payment-asset": self.payment_intent.asset,
+            "x-agent-payment-max-fee": str(self.payment_intent.max_fee),
+            "authorization": (
+                f'KakoroGuard key="{self.agent_id}",ts="{self.timestamp}",sig="{self.signature}",'
+                f'amount="{self.payment_intent.amount}",asset="{self.payment_intent.asset}"'
+            ),
+        }
+        if self.payment_intent.destination:
+            headers["x-agent-payment-destination"] = self.payment_intent.destination
+        return headers
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return dict representation of the synergistic payload."""
+        return self.model_dump()

@@ -158,6 +158,107 @@ def build_synergistic_signing_message(
     return build_signing_message(canonical_json_or_hash, timestamp)
 
 
+class AgentSigner:
+    """High-level signer for an AI Agent to construct signed requests and attach AgentPay authorization."""
+
+    def __init__(self, keypair: AgentKeypair) -> None:
+        self.keypair = keypair
+
+    def sign(self, payload: Any, timestamp: int | None = None) -> AgentAuthHeader:
+        """Sign a payload and return an AgentAuthHeader."""
+        return generate_auth_header(payload, self.keypair, timestamp=timestamp)
+
+    def attach_payment(
+        self,
+        cost: str,
+        asset: str = "XLM",
+        payload: Any = None,
+        max_fee: int = 100_000,
+        destination: str | None = None,
+        timestamp: int | None = None,
+    ) -> AgentRequestPayload:
+        """Attach an AgentPay payment intent to a request and cryptographically sign the combination.
+
+        Args:
+            cost: Payment amount (e.g. "5_XLM" or "5.0").
+            asset: Stellar asset identifier (default: "XLM").
+            payload: Optional application request payload (defaults to empty dict).
+            max_fee: Maximum fee in stroops.
+            destination: Optional provider destination address.
+            timestamp: Optional timestamp in ms (defaults to current time).
+
+        Returns:
+            An AgentRequestPayload instance containing identity, signature, payment intent, and payload.
+        """
+        return attach_payment(
+            cost=cost,
+            asset=asset,
+            payload=payload,
+            keypair=self.keypair,
+            max_fee=max_fee,
+            destination=destination,
+            timestamp=timestamp,
+        )
+
+
+def attach_payment(
+    cost: str,
+    asset: str = "XLM",
+    payload: Any = None,
+    keypair: AgentKeypair | None = None,
+    max_fee: int = 100_000,
+    destination: str | None = None,
+    timestamp: int | None = None,
+) -> AgentRequestPayload:
+    """Attach an AgentPay payment intent to a request and cryptographically sign the combination.
+
+    Args:
+        cost: Payment amount (e.g. "5_XLM" or "5.0").
+        asset: Stellar asset identifier (default: "XLM").
+        payload: Optional application request payload (defaults to empty dict).
+        keypair: AgentKeypair for signing. If omitted, a temporary keypair is generated.
+        max_fee: Maximum fee in stroops.
+        destination: Optional provider destination address.
+        timestamp: Optional timestamp in ms (defaults to current time).
+
+    Returns:
+        An AgentRequestPayload instance containing identity, signature, payment intent, and payload.
+    """
+    if keypair is None:
+        keypair = AgentKeypair.generate()
+
+    if timestamp is None:
+        timestamp = get_current_timestamp_ms()
+
+    intent = PaymentIntent(
+        amount=cost,
+        asset=asset,
+        max_fee=max_fee,
+        destination=destination,
+    )
+
+    app_dict: dict[str, Any]
+    if payload is None:
+        app_dict = {}
+    elif isinstance(payload, Mapping):
+        app_dict = dict(payload)
+    else:
+        app_dict = {"data": payload}
+
+    canonical = serialize_synergistic_payload(app_dict, intent)
+    message = build_signing_message(canonical, timestamp)
+    signature_bytes = keypair.sign(message)
+    signature_hex = signature_bytes.hex()
+
+    return AgentRequestPayload(
+        agent_id=keypair.public_key,
+        timestamp=timestamp,
+        signature=signature_hex,
+        payment_intent=intent,
+        payload=app_dict,
+    )
+
+
 def build_signing_message(canonical_json: str, timestamp: int | None = None) -> bytes:
     """Build the binary message to be signed.
 
