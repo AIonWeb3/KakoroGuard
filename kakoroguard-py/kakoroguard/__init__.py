@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from kakoroguard.errors import (
     AgentKeyError,
+    AgentPaySettlementError,
     AgentSignatureInvalid,
     AgentSigningError,
     AgentTimestampExpiredError,
@@ -11,6 +12,7 @@ from kakoroguard.errors import (
     SerializationError,
 )
 from kakoroguard.fastapi import (
+    AgentPayClient,
     KakoroGuardProviderConfig,
     SorobanRpcClient,
     get_provider_config,
@@ -42,6 +44,8 @@ __all__ = [
     "AgentAuthHeader",
     "AgentKeyError",
     "AgentKeypair",
+    "AgentPayClient",
+    "AgentPaySettlementError",
     "AgentRequestPayload",
     "AgentSignatureInvalid",
     "AgentSigner",
