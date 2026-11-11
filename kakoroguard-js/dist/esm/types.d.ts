@@ -51,7 +51,7 @@ export interface AgentAuthHeader {
         amount: string;
         asset: string;
         max_fee: number;
-        destination?: string;
+        destination?: string | null;
     };
 }
 /**

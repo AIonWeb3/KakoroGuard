@@ -6,7 +6,7 @@ export declare const PaymentIntentSchema: z.ZodObject<{
     amount: z.ZodString;
     asset: z.ZodDefault<z.ZodString>;
     max_fee: z.ZodDefault<z.ZodNumber>;
-    destination: z.ZodOptional<z.ZodString>;
+    destination: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, z.core.$strip>;
 export type PaymentIntent = z.infer<typeof PaymentIntentSchema>;
 export declare const AgentRequestPayloadSchema: z.ZodPipe<z.ZodObject<{
@@ -18,12 +18,12 @@ export declare const AgentRequestPayloadSchema: z.ZodPipe<z.ZodObject<{
         amount: z.ZodString;
         asset: z.ZodDefault<z.ZodString>;
         max_fee: z.ZodDefault<z.ZodNumber>;
-        destination: z.ZodOptional<z.ZodString>;
+        destination: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     }, z.core.$strip>>;
     amount: z.ZodOptional<z.ZodString>;
     asset: z.ZodOptional<z.ZodString>;
     max_fee: z.ZodOptional<z.ZodNumber>;
-    destination: z.ZodOptional<z.ZodString>;
+    destination: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     payload: z.ZodDefault<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>>;
 }, z.core.$strip>, z.ZodTransform<{
     agent_id: string;
@@ -34,7 +34,7 @@ export declare const AgentRequestPayloadSchema: z.ZodPipe<z.ZodObject<{
         amount: string;
         asset: string;
         max_fee: number;
-        destination?: string | undefined;
+        destination?: string | null | undefined;
     };
     payload: Record<string, unknown>;
 }, {
@@ -47,12 +47,12 @@ export declare const AgentRequestPayloadSchema: z.ZodPipe<z.ZodObject<{
         amount: string;
         asset: string;
         max_fee: number;
-        destination?: string | undefined;
+        destination?: string | null | undefined;
     } | undefined;
     amount?: string | undefined;
     asset?: string | undefined;
     max_fee?: number | undefined;
-    destination?: string | undefined;
+    destination?: string | null | undefined;
 }>>;
 export type AgentRequestPayload = z.output<typeof AgentRequestPayloadSchema>;
 export type AgentRequestPayloadInput = z.input<typeof AgentRequestPayloadSchema>;

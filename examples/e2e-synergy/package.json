@@ -9,6 +9,7 @@
     "test:runner": "node runner.js"
   },
   "dependencies": {
+    "@stellar/stellar-sdk": "^13.1.0",
     "express": "^4.21.2",
     "kakoroguard-js": "file:../../kakoroguard-js"
   }

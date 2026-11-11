@@ -12,10 +12,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
 from typing import Any
+
+# Ensure kakoroguard is discoverable if not installed system-wide
+_sdk_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "kakoroguard-py"))
+if _sdk_path not in sys.path:
+    sys.path.insert(0, _sdk_path)
 
 from kakoroguard.keys import AgentKeypair
 from kakoroguard.signer import AgentSigner, get_current_timestamp_ms

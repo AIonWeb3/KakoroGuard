@@ -9,7 +9,7 @@ exports.PaymentIntentSchema = zod_1.z.object({
     amount: zod_1.z.string().min(1, "Payment amount is required"),
     asset: zod_1.z.string().default("XLM"),
     max_fee: zod_1.z.number().int().nonnegative().default(100_000),
-    destination: zod_1.z.string().optional(),
+    destination: zod_1.z.string().nullable().optional(),
 });
 exports.AgentRequestPayloadSchema = zod_1.z
     .object({
@@ -21,7 +21,7 @@ exports.AgentRequestPayloadSchema = zod_1.z
     amount: zod_1.z.string().optional(),
     asset: zod_1.z.string().optional(),
     max_fee: zod_1.z.number().optional(),
-    destination: zod_1.z.string().optional(),
+    destination: zod_1.z.string().nullable().optional(),
     payload: zod_1.z.record(zod_1.z.string(), zod_1.z.unknown()).optional().default({}),
 })
     .transform((data) => {

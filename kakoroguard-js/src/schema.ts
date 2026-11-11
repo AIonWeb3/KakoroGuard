@@ -8,7 +8,7 @@ export const PaymentIntentSchema = z.object({
   amount: z.string().min(1, "Payment amount is required"),
   asset: z.string().default("XLM"),
   max_fee: z.number().int().nonnegative().default(100_000),
-  destination: z.string().optional(),
+  destination: z.string().nullable().optional(),
 });
 
 export type PaymentIntent = z.infer<typeof PaymentIntentSchema>;
@@ -23,7 +23,7 @@ export const AgentRequestPayloadSchema = z
     amount: z.string().optional(),
     asset: z.string().optional(),
     max_fee: z.number().optional(),
-    destination: z.string().optional(),
+    destination: z.string().nullable().optional(),
     payload: z.record(z.string(), z.unknown()).optional().default({}),
   })
   .transform((data) => {
