@@ -1,0 +1,15 @@
+{
+  "name": "e2e-synergy-demo",
+  "version": "0.1.0",
+  "description": "End-to-end synergy demo of KakoroGuard RBAC and AgentPay financial settlement",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test:runner": "node runner.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "kakoroguard-js": "file:../../kakoroguard-js"
+  }
+}
