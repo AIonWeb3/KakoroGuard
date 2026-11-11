@@ -10,13 +10,17 @@ from kakoroguard.errors import (
     SerializationError,
 )
 from kakoroguard.keys import AgentKeypair
+from kakoroguard.schema import AgentRequestPayload, PaymentIntent
 from kakoroguard.signer import (
     AgentAuthHeader,
     build_signing_message,
+    build_synergistic_signing_message,
     canonicalize_payload,
     create_auth_headers,
     generate_auth_header,
     get_current_timestamp_ms,
+    hash_synergistic_payload,
+    serialize_synergistic_payload,
     sign_request,
     validate_timestamp,
 )
@@ -178,3 +182,34 @@ def test_validate_timestamp_future_clock_skew() -> None:
     # 2 minutes in the future (default skew tolerance is 1 minute)
     with pytest.raises(AgentTimestampExpiredError, match="in the future"):
         validate_timestamp(now + 120_000, current_time_ms=now)
+
+
+def test_synergistic_serialization_and_hashing() -> None:
+    payload = {"query": "SELECT *", "limit": 10}
+    intent = PaymentIntent(amount="5_XLM", destination="GDEST123")
+
+    canonical = serialize_synergistic_payload(payload, intent)
+    assert '"amount":"5_XLM"' in canonical
+    assert '"query":"SELECT *"' in canonical
+    assert '"destination":"GDEST123"' in canonical
+
+    h = hash_synergistic_payload(payload, intent)
+    assert len(h) == 64
+    assert int(h, 16) > 0
+
+    # Test with AgentRequestPayload instance
+    req = AgentRequestPayload(
+        agent_id="GAGENT",
+        timestamp=1700000000000,
+        signature="deadbeef",
+        payment_intent=intent,
+        payload=payload,
+    )
+    canonical_from_req = serialize_synergistic_payload(req)
+    assert canonical_from_req == canonical
+    assert hash_synergistic_payload(req) == h
+
+    # Test signing message
+    msg = build_synergistic_signing_message(h, timestamp=1700000000000)
+    assert msg.startswith(b"1700000000000.")
+

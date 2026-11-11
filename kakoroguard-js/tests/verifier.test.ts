@@ -3,8 +3,11 @@ import assert from "node:assert";
 import { Keypair } from "@stellar/stellar-sdk";
 import {
   assertSignatureValid,
+  buildSynergisticSigningMessage,
   canonicalizePayload,
+  hashSynergisticPayload,
   parseSignature,
+  serializeSynergisticPayload,
   validateTimestamp,
   verifySignature,
 } from "../dist/esm/verifier.js";
@@ -224,6 +227,35 @@ describe("verifier.ts", () => {
           }),
         (err: Error) => err instanceof AgentSignatureInvalid
       );
+    });
+  });
+
+  describe("serializeSynergisticPayload & hashSynergisticPayload", () => {
+    it("serializes payload and payment intent into canonical JSON and hashes with SHA-256", () => {
+      const payload = { query: "SELECT *", limit: 10 };
+      const intent = { amount: "5_XLM", destination: "GDEST123" };
+
+      const canonical = serializeSynergisticPayload(payload, intent);
+      assert.ok(canonical.includes('"amount":"5_XLM"'));
+      assert.ok(canonical.includes('"query":"SELECT *"'));
+      assert.ok(canonical.includes('"destination":"GDEST123"'));
+
+      const hash = hashSynergisticPayload(payload, intent);
+      assert.strictEqual(hash.length, 64);
+      assert.strictEqual(/^[0-9a-f]{64}$/.test(hash), true);
+
+      // From combined object
+      const combined = {
+        payload,
+        payment_intent: intent,
+      };
+      const canonicalCombined = serializeSynergisticPayload(combined);
+      assert.strictEqual(canonicalCombined, canonical);
+      assert.strictEqual(hashSynergisticPayload(combined), hash);
+
+      // Signing message
+      const msg = buildSynergisticSigningMessage(hash, 1700000000000);
+      assert.ok(Buffer.from(msg).toString("utf8").startsWith("1700000000000."));
     });
   });
 });

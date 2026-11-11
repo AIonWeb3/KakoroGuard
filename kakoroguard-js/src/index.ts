@@ -17,10 +17,13 @@ export {
 
 export {
   assertSignatureValid,
+  buildSynergisticSigningMessage,
   canonicalizePayload,
   DEFAULT_CLOCK_SKEW_MS,
   DEFAULT_MAX_AGE_MS,
+  hashSynergisticPayload,
   parseSignature,
+  serializeSynergisticPayload,
   validateTimestamp,
   verifySignature,
 } from "./verifier.js";

@@ -6,7 +6,7 @@
  */
 export { KakoroGuardContract } from "./contract.js";
 export { AgentRequestPayloadSchema, PaymentIntentSchema, } from "./schema.js";
-export { assertSignatureValid, canonicalizePayload, DEFAULT_CLOCK_SKEW_MS, DEFAULT_MAX_AGE_MS, parseSignature, validateTimestamp, verifySignature, } from "./verifier.js";
+export { assertSignatureValid, buildSynergisticSigningMessage, canonicalizePayload, DEFAULT_CLOCK_SKEW_MS, DEFAULT_MAX_AGE_MS, hashSynergisticPayload, parseSignature, serializeSynergisticPayload, validateTimestamp, verifySignature, } from "./verifier.js";
 export { extractAuthHeader, requireAgentRole, } from "./middleware.js";
 export { AgentPermissionDeniedError, AgentSignatureInvalid, AgentTimestampExpiredError, AgentUnauthorizedError, ContractReadError, KakoroGuardError, NetworkRetryExhaustedError, } from "./errors.js";
 export { AgentStatus, parseRole, Role, ROLE_NAMES, } from "./types.js";

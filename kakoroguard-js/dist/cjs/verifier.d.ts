@@ -1,6 +1,7 @@
 /**
  * Verification module for KakoroGuard cryptographic request signatures & replay protection.
  */
+import { PaymentIntent } from "./schema.js";
 import { VerifyOptions } from "./types.js";
 /** Default replay attack threshold: 5 minutes in milliseconds */
 export declare const DEFAULT_MAX_AGE_MS: number;
@@ -15,6 +16,21 @@ export declare const DEFAULT_CLOCK_SKEW_MS: number;
  * - Removing whitespace between keys and values.
  */
 export declare function canonicalizePayload(payload: unknown): string;
+/**
+ * Deterministically serializes a synergistic payload and payment intent into canonical JSON.
+ *
+ * Combines application payload with payment intent to bind financial authorization
+ * with KakoroGuard identity, preventing tampering of amounts or destination.
+ */
+export declare function serializeSynergisticPayload(payload: unknown, paymentIntent?: PaymentIntent | Record<string, unknown>): string;
+/**
+ * Computes deterministic SHA-256 hex digest of the synergistic payload.
+ */
+export declare function hashSynergisticPayload(payload: unknown, paymentIntent?: PaymentIntent | Record<string, unknown>): string;
+/**
+ * Builds binary message to verify/sign for synergistic request.
+ */
+export declare function buildSynergisticSigningMessage(canonicalJsonOrHash: string, timestamp?: number): Uint8Array;
 /**
  * Validates timestamp for replay-attack prevention.
  *

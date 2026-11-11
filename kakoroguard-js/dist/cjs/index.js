@@ -6,7 +6,7 @@
  * Soroban contract RBAC integration, and Express.js middleware.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ROLE_NAMES = exports.Role = exports.parseRole = exports.AgentStatus = exports.NetworkRetryExhaustedError = exports.KakoroGuardError = exports.ContractReadError = exports.AgentUnauthorizedError = exports.AgentTimestampExpiredError = exports.AgentSignatureInvalid = exports.AgentPermissionDeniedError = exports.requireAgentRole = exports.extractAuthHeader = exports.verifySignature = exports.validateTimestamp = exports.parseSignature = exports.DEFAULT_MAX_AGE_MS = exports.DEFAULT_CLOCK_SKEW_MS = exports.canonicalizePayload = exports.assertSignatureValid = exports.PaymentIntentSchema = exports.AgentRequestPayloadSchema = exports.KakoroGuardContract = void 0;
+exports.ROLE_NAMES = exports.Role = exports.parseRole = exports.AgentStatus = exports.NetworkRetryExhaustedError = exports.KakoroGuardError = exports.ContractReadError = exports.AgentUnauthorizedError = exports.AgentTimestampExpiredError = exports.AgentSignatureInvalid = exports.AgentPermissionDeniedError = exports.requireAgentRole = exports.extractAuthHeader = exports.verifySignature = exports.validateTimestamp = exports.serializeSynergisticPayload = exports.parseSignature = exports.hashSynergisticPayload = exports.DEFAULT_MAX_AGE_MS = exports.DEFAULT_CLOCK_SKEW_MS = exports.canonicalizePayload = exports.buildSynergisticSigningMessage = exports.assertSignatureValid = exports.PaymentIntentSchema = exports.AgentRequestPayloadSchema = exports.KakoroGuardContract = void 0;
 var contract_js_1 = require("./contract.js");
 Object.defineProperty(exports, "KakoroGuardContract", { enumerable: true, get: function () { return contract_js_1.KakoroGuardContract; } });
 var schema_js_1 = require("./schema.js");
@@ -14,10 +14,13 @@ Object.defineProperty(exports, "AgentRequestPayloadSchema", { enumerable: true, 
 Object.defineProperty(exports, "PaymentIntentSchema", { enumerable: true, get: function () { return schema_js_1.PaymentIntentSchema; } });
 var verifier_js_1 = require("./verifier.js");
 Object.defineProperty(exports, "assertSignatureValid", { enumerable: true, get: function () { return verifier_js_1.assertSignatureValid; } });
+Object.defineProperty(exports, "buildSynergisticSigningMessage", { enumerable: true, get: function () { return verifier_js_1.buildSynergisticSigningMessage; } });
 Object.defineProperty(exports, "canonicalizePayload", { enumerable: true, get: function () { return verifier_js_1.canonicalizePayload; } });
 Object.defineProperty(exports, "DEFAULT_CLOCK_SKEW_MS", { enumerable: true, get: function () { return verifier_js_1.DEFAULT_CLOCK_SKEW_MS; } });
 Object.defineProperty(exports, "DEFAULT_MAX_AGE_MS", { enumerable: true, get: function () { return verifier_js_1.DEFAULT_MAX_AGE_MS; } });
+Object.defineProperty(exports, "hashSynergisticPayload", { enumerable: true, get: function () { return verifier_js_1.hashSynergisticPayload; } });
 Object.defineProperty(exports, "parseSignature", { enumerable: true, get: function () { return verifier_js_1.parseSignature; } });
+Object.defineProperty(exports, "serializeSynergisticPayload", { enumerable: true, get: function () { return verifier_js_1.serializeSynergisticPayload; } });
 Object.defineProperty(exports, "validateTimestamp", { enumerable: true, get: function () { return verifier_js_1.validateTimestamp; } });
 Object.defineProperty(exports, "verifySignature", { enumerable: true, get: function () { return verifier_js_1.verifySignature; } });
 var middleware_js_1 = require("./middleware.js");

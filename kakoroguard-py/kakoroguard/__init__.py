@@ -15,10 +15,13 @@ from kakoroguard.schema import AgentRequestPayload, PaymentIntent
 from kakoroguard.signer import (
     MAX_TIMESTAMP_AGE_MS,
     AgentAuthHeader,
+    build_synergistic_signing_message,
     canonicalize_payload,
     create_auth_headers,
     generate_auth_header,
     get_current_timestamp_ms,
+    hash_synergistic_payload,
+    serialize_synergistic_payload,
     sign_request,
     validate_timestamp,
 )
@@ -37,10 +40,13 @@ __all__ = [
     "KakoroGuardError",
     "PaymentIntent",
     "SerializationError",
+    "build_synergistic_signing_message",
     "canonicalize_payload",
     "create_auth_headers",
     "generate_auth_header",
     "get_current_timestamp_ms",
+    "hash_synergistic_payload",
+    "serialize_synergistic_payload",
     "sign_request",
     "validate_timestamp",
 ]
