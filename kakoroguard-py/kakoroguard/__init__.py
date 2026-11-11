@@ -10,6 +10,13 @@ from kakoroguard.errors import (
     KakoroGuardError,
     SerializationError,
 )
+from kakoroguard.fastapi import (
+    KakoroGuardProviderConfig,
+    SorobanRpcClient,
+    get_provider_config,
+    require_agent_role,
+    set_provider_config,
+)
 from kakoroguard.keys import AgentKeypair
 from kakoroguard.schema import AgentRequestPayload, PaymentIntent
 from kakoroguard.signer import (
@@ -41,16 +48,21 @@ __all__ = [
     "AgentSigningError",
     "AgentTimestampExpiredError",
     "KakoroGuardError",
+    "KakoroGuardProviderConfig",
     "PaymentIntent",
     "SerializationError",
+    "SorobanRpcClient",
     "attach_payment",
     "build_synergistic_signing_message",
     "canonicalize_payload",
     "create_auth_headers",
     "generate_auth_header",
     "get_current_timestamp_ms",
+    "get_provider_config",
     "hash_synergistic_payload",
+    "require_agent_role",
     "serialize_synergistic_payload",
+    "set_provider_config",
     "sign_request",
     "validate_timestamp",
 ]
