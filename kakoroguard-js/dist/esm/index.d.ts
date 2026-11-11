@@ -9,5 +9,5 @@ export { AgentRequestPayloadSchema, PaymentIntentSchema, type AgentRequestPayloa
 export { assertSignatureValid, buildSynergisticSigningMessage, canonicalizePayload, DEFAULT_CLOCK_SKEW_MS, DEFAULT_MAX_AGE_MS, hashSynergisticPayload, parseSignature, serializeSynergisticPayload, validateTimestamp, verifySignature, } from "./verifier.js";
 export { extractAuthHeader, requireAgentRole, type RequireRoleOptions, } from "./middleware.js";
 export { AgentPermissionDeniedError, AgentSignatureInvalid, AgentTimestampExpiredError, AgentUnauthorizedError, ContractReadError, KakoroGuardError, NetworkRetryExhaustedError, } from "./errors.js";
-export { type AgentAuthHeader, type KakoroGuardConfig, type KakoroGuardRequest, type KakoroGuardResponse, AgentStatus, type NextFunction, parseRole, Role, ROLE_NAMES, type VerifyOptions, } from "./types.js";
+export { type AgentAuthHeader, type AgentPaySettler, type KakoroGuardConfig, type KakoroGuardRequest, type KakoroGuardResponse, AgentStatus, type NextFunction, parseRole, Role, ROLE_NAMES, type VerifyOptions, } from "./types.js";
 //# sourceMappingURL=index.d.ts.map

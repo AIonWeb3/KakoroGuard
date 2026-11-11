@@ -46,6 +46,7 @@ export {
 
 export {
   type AgentAuthHeader,
+  type AgentPaySettler,
   type KakoroGuardConfig,
   type KakoroGuardRequest,
   type KakoroGuardResponse,

@@ -24,12 +24,35 @@ export declare enum AgentStatus {
     Revoked = 2
 }
 /**
+ * Standard AgentPay settlement client interface.
+ */
+export interface AgentPaySettler {
+    settlePayment(params: {
+        agentId: string;
+        amount: string;
+        asset?: string;
+        maxFee?: number;
+        destination?: string;
+    }): Promise<{
+        status: string;
+        txHash: string;
+        settled: boolean;
+        [key: string]: unknown;
+    }>;
+}
+/**
  * Standard KakoroGuard authentication header payload.
  */
 export interface AgentAuthHeader {
     publicKey: string;
     timestamp: number;
     signature: string;
+    paymentIntent?: {
+        amount: string;
+        asset: string;
+        max_fee: number;
+        destination?: string;
+    };
 }
 /**
  * Configuration options for KakoroGuardContract.
@@ -65,6 +88,9 @@ export interface KakoroGuardRequest {
     body?: unknown;
     agentId?: string;
     agentPublicKey?: string;
+    agentTimestamp?: number;
+    paymentIntent?: unknown;
+    paymentReceipt?: unknown;
     [key: string]: unknown;
 }
 /**
