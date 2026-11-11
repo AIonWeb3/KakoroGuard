@@ -8,6 +8,14 @@
 export { KakoroGuardContract, type RpcSimulator } from "./contract.js";
 
 export {
+  AgentRequestPayloadSchema,
+  PaymentIntentSchema,
+  type AgentRequestPayload,
+  type AgentRequestPayloadInput,
+  type PaymentIntent,
+} from "./schema.js";
+
+export {
   assertSignatureValid,
   canonicalizePayload,
   DEFAULT_CLOCK_SKEW_MS,

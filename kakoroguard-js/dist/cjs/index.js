@@ -6,9 +6,12 @@
  * Soroban contract RBAC integration, and Express.js middleware.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ROLE_NAMES = exports.Role = exports.parseRole = exports.AgentStatus = exports.NetworkRetryExhaustedError = exports.KakoroGuardError = exports.ContractReadError = exports.AgentUnauthorizedError = exports.AgentTimestampExpiredError = exports.AgentSignatureInvalid = exports.AgentPermissionDeniedError = exports.requireAgentRole = exports.extractAuthHeader = exports.verifySignature = exports.validateTimestamp = exports.parseSignature = exports.DEFAULT_MAX_AGE_MS = exports.DEFAULT_CLOCK_SKEW_MS = exports.canonicalizePayload = exports.assertSignatureValid = exports.KakoroGuardContract = void 0;
+exports.ROLE_NAMES = exports.Role = exports.parseRole = exports.AgentStatus = exports.NetworkRetryExhaustedError = exports.KakoroGuardError = exports.ContractReadError = exports.AgentUnauthorizedError = exports.AgentTimestampExpiredError = exports.AgentSignatureInvalid = exports.AgentPermissionDeniedError = exports.requireAgentRole = exports.extractAuthHeader = exports.verifySignature = exports.validateTimestamp = exports.parseSignature = exports.DEFAULT_MAX_AGE_MS = exports.DEFAULT_CLOCK_SKEW_MS = exports.canonicalizePayload = exports.assertSignatureValid = exports.PaymentIntentSchema = exports.AgentRequestPayloadSchema = exports.KakoroGuardContract = void 0;
 var contract_js_1 = require("./contract.js");
 Object.defineProperty(exports, "KakoroGuardContract", { enumerable: true, get: function () { return contract_js_1.KakoroGuardContract; } });
+var schema_js_1 = require("./schema.js");
+Object.defineProperty(exports, "AgentRequestPayloadSchema", { enumerable: true, get: function () { return schema_js_1.AgentRequestPayloadSchema; } });
+Object.defineProperty(exports, "PaymentIntentSchema", { enumerable: true, get: function () { return schema_js_1.PaymentIntentSchema; } });
 var verifier_js_1 = require("./verifier.js");
 Object.defineProperty(exports, "assertSignatureValid", { enumerable: true, get: function () { return verifier_js_1.assertSignatureValid; } });
 Object.defineProperty(exports, "canonicalizePayload", { enumerable: true, get: function () { return verifier_js_1.canonicalizePayload; } });

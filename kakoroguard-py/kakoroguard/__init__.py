@@ -11,6 +11,7 @@ from kakoroguard.errors import (
     SerializationError,
 )
 from kakoroguard.keys import AgentKeypair
+from kakoroguard.schema import AgentRequestPayload, PaymentIntent
 from kakoroguard.signer import (
     MAX_TIMESTAMP_AGE_MS,
     AgentAuthHeader,
@@ -29,10 +30,12 @@ __all__ = [
     "AgentAuthHeader",
     "AgentKeyError",
     "AgentKeypair",
+    "AgentRequestPayload",
     "AgentSignatureInvalid",
     "AgentSigningError",
     "AgentTimestampExpiredError",
     "KakoroGuardError",
+    "PaymentIntent",
     "SerializationError",
     "canonicalize_payload",
     "create_auth_headers",
