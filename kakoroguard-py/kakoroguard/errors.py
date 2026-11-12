@@ -35,3 +35,7 @@ class AgentTimestampExpiredError(KakoroGuardError):
 
 class SerializationError(KakoroGuardError):
     """Raised when a payload cannot be canonically serialized to JSON."""
+
+
+class AgentPaySettlementError(KakoroGuardError):
+    """Raised when on-chain financial settlement via AgentPay fails."""

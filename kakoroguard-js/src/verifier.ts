@@ -3,7 +3,9 @@
  */
 
 import { Keypair, StrKey } from "@stellar/stellar-sdk";
+import { createHash } from "node:crypto";
 import { AgentSignatureInvalid, AgentTimestampExpiredError } from "./errors.js";
+import { PaymentIntent } from "./schema.js";
 import { VerifyOptions } from "./types.js";
 
 /** Default replay attack threshold: 5 minutes in milliseconds */
@@ -44,6 +46,76 @@ export function canonicalizePayload(payload: unknown): string {
   }
 
   return `{${entries.join(",")}}`;
+}
+
+/**
+ * Deterministically serializes a synergistic payload and payment intent into canonical JSON.
+ *
+ * Combines application payload with payment intent to bind financial authorization
+ * with KakoroGuard identity, preventing tampering of amounts or destination.
+ */
+export function serializeSynergisticPayload(
+  payload: unknown,
+  paymentIntent?: PaymentIntent | Record<string, unknown>
+): string {
+  let appPayload: unknown = payload;
+  let intentData: Record<string, unknown> | null = null;
+
+  if (payload && typeof payload === "object") {
+    const obj = payload as Record<string, unknown>;
+    if ("payment_intent" in obj && obj.payment_intent && typeof obj.payment_intent === "object") {
+      appPayload = obj.payload ?? {};
+      const rawIntent = obj.payment_intent as Record<string, unknown>;
+      intentData = {
+        amount: String(rawIntent.amount ?? ""),
+        asset: String(rawIntent.asset ?? "XLM"),
+        destination: rawIntent.destination ?? null,
+        max_fee: typeof rawIntent.max_fee === "number" ? rawIntent.max_fee : Number(rawIntent.max_fee ?? 100_000),
+      };
+    }
+  }
+
+  if (!intentData && paymentIntent) {
+    const rawIntent = paymentIntent as Record<string, unknown>;
+    intentData = {
+      amount: String(rawIntent.amount ?? ""),
+      asset: String(rawIntent.asset ?? "XLM"),
+      destination: rawIntent.destination ?? null,
+      max_fee: typeof rawIntent.max_fee === "number" ? rawIntent.max_fee : Number(rawIntent.max_fee ?? 100_000),
+    };
+  }
+
+  const combined = {
+    payment_intent: intentData ?? {},
+    payload: appPayload ?? {},
+  };
+
+  return canonicalizePayload(combined);
+}
+
+/**
+ * Computes deterministic SHA-256 hex digest of the synergistic payload.
+ */
+export function hashSynergisticPayload(
+  payload: unknown,
+  paymentIntent?: PaymentIntent | Record<string, unknown>
+): string {
+  const canonical =
+    typeof payload === "string" && !paymentIntent
+      ? payload
+      : serializeSynergisticPayload(payload, paymentIntent);
+  return createHash("sha256").update(canonical, "utf8").digest("hex");
+}
+
+/**
+ * Builds binary message to verify/sign for synergistic request.
+ */
+export function buildSynergisticSigningMessage(
+  canonicalJsonOrHash: string,
+  timestamp?: number
+): Uint8Array {
+  const msgStr = timestamp !== undefined ? `${timestamp}.${canonicalJsonOrHash}` : canonicalJsonOrHash;
+  return Buffer.from(msgStr, "utf8");
 }
 
 /**

@@ -5,7 +5,10 @@ import { KakoroGuardContract } from "../dist/esm/contract.js";
 import { AgentUnauthorizedError } from "../dist/esm/errors.js";
 import { extractAuthHeader, requireAgentRole } from "../dist/esm/middleware.js";
 import type { KakoroGuardRequest, KakoroGuardResponse } from "../dist/esm/types.js";
-import { canonicalizePayload } from "../dist/esm/verifier.js";
+import {
+  canonicalizePayload,
+  serializeSynergisticPayload,
+} from "../dist/esm/verifier.js";
 
 const VALID_CONTRACT_ID = "CAAQCAIBAEAQCAIBAEAQCAIBAEAQCAIBAEAQCAIBAEAQCAIBAEAQC526";
 
@@ -348,6 +351,251 @@ describe("middleware.ts", () => {
       assert.strictEqual(req.agentId, validAgent);
       assert.strictEqual(req.agentPublicKey, validAgent);
       assert.strictEqual(req.agentTimestamp, now);
+    });
+
+    it("settles payment and calls next() on valid synergistic request with cost", async () => {
+      const mockSimulator = {
+        simulateTransaction: async () => ({
+          result: { retval: nativeToScVal(true, { type: "bool" }) },
+        }),
+      };
+
+      const contract = new KakoroGuardContract(
+        {
+          contractId: VALID_CONTRACT_ID,
+          rpcUrl: "https://soroban-testnet.stellar.org",
+          networkPassphrase: "Test SDF Network ; September 2015",
+        },
+        mockSimulator
+      );
+
+      const now = 1710000000000;
+      const appPayload = { query: "SELECT * FROM premium" };
+      const paymentIntent = {
+        amount: "5_XLM",
+        asset: "XLM",
+        max_fee: 100_000,
+        destination: "GPROVIDER_ACCT",
+      };
+
+      const canonical = serializeSynergisticPayload(appPayload, paymentIntent);
+      const msg = Buffer.from(`${now}.${canonical}`, "utf-8");
+      const sigHex = keypair.sign(msg).toString("hex");
+
+      const middleware = requireAgentRole("Premium", "5_XLM", {
+        contract,
+        verifyOptions: { currentTimeMs: now },
+      });
+
+      const req: KakoroGuardRequest = {
+        headers: {
+          "x-agent-public-key": validAgent,
+          "x-agent-timestamp": String(now),
+          "x-agent-signature": sigHex,
+          "x-agent-payment-amount": "5_XLM",
+          "x-agent-payment-destination": "GPROVIDER_ACCT",
+        },
+        body: appPayload,
+      };
+      const mock = createMockResponse();
+
+      let nextCalled = false;
+      await middleware(req, mock.res, () => {
+        nextCalled = true;
+      });
+
+      assert.strictEqual(nextCalled, true);
+      assert.strictEqual(mock.statusCode, 200);
+      assert.ok(req.paymentReceipt);
+      assert.strictEqual((req.paymentReceipt as { status: string }).status, "SETTLED");
+    });
+
+    it("returns 401 UNAUTHORIZED when cost is required but payment intent is missing", async () => {
+      const mockSimulator = {
+        simulateTransaction: async () => ({
+          result: { retval: nativeToScVal(true, { type: "bool" }) },
+        }),
+      };
+
+      const contract = new KakoroGuardContract(
+        {
+          contractId: VALID_CONTRACT_ID,
+          rpcUrl: "https://soroban-testnet.stellar.org",
+          networkPassphrase: "Test SDF Network ; September 2015",
+        },
+        mockSimulator
+      );
+
+      const now = 1710000000000;
+      const appPayload = { query: "free query" };
+      const canonical = canonicalizePayload(appPayload);
+      const msg = Buffer.from(`${now}.${canonical}`, "utf-8");
+      const sigHex = keypair.sign(msg).toString("hex");
+
+      const middleware = requireAgentRole("Premium", "5_XLM", {
+        contract,
+        verifyOptions: { currentTimeMs: now },
+      });
+
+      const req: KakoroGuardRequest = {
+        headers: {
+          "x-agent-public-key": validAgent,
+          "x-agent-timestamp": String(now),
+          "x-agent-signature": sigHex,
+          // Missing payment intent!
+        },
+        body: appPayload,
+      };
+      const mock = createMockResponse();
+
+      let nextCalled = false;
+      await middleware(req, mock.res, () => {
+        nextCalled = true;
+      });
+
+      assert.strictEqual(nextCalled, false);
+      assert.strictEqual(mock.statusCode, 401);
+      assert.ok((mock.body as { error: string }).error.includes("Endpoint requires payment"));
+    });
+
+    it("returns 402 PAYMENT_REQUIRED when AgentPay settlement fails", async () => {
+      const mockSimulator = {
+        simulateTransaction: async () => ({
+          result: { retval: nativeToScVal(true, { type: "bool" }) },
+        }),
+      };
+
+      const contract = new KakoroGuardContract(
+        {
+          contractId: VALID_CONTRACT_ID,
+          rpcUrl: "https://soroban-testnet.stellar.org",
+          networkPassphrase: "Test SDF Network ; September 2015",
+        },
+        mockSimulator
+      );
+
+      const now = 1710000000000;
+      const appPayload = { query: "fail query" };
+      const paymentIntent = {
+        amount: "INSUFFICIENT_FUNDS",
+        asset: "XLM",
+        max_fee: 100_000,
+      };
+
+      const canonical = serializeSynergisticPayload(appPayload, paymentIntent);
+      const msg = Buffer.from(`${now}.${canonical}`, "utf-8");
+      const sigHex = keypair.sign(msg).toString("hex");
+
+      const middleware = requireAgentRole("Premium", "INSUFFICIENT_FUNDS", {
+        contract,
+        verifyOptions: { currentTimeMs: now },
+      });
+
+      const req: KakoroGuardRequest = {
+        headers: {
+          "x-agent-public-key": validAgent,
+          "x-agent-timestamp": String(now),
+          "x-agent-signature": sigHex,
+          "x-agent-payment-amount": "INSUFFICIENT_FUNDS",
+        },
+        body: appPayload,
+      };
+      const mock = createMockResponse();
+
+      let nextCalled = false;
+      await middleware(req, mock.res, () => {
+        nextCalled = true;
+      });
+
+      assert.strictEqual(nextCalled, false);
+      assert.strictEqual(mock.statusCode, 402);
+      assert.strictEqual((mock.body as { code: string }).code, "PAYMENT_REQUIRED");
+      assert.ok((mock.body as { error: string }).error.includes("Insufficient AgentPay balance"));
+    });
+
+    it("handles body-based AgentRequestPayload", async () => {
+      const mockSimulator = {
+        simulateTransaction: async () => ({
+          result: { retval: nativeToScVal(true, { type: "bool" }) },
+        }),
+      };
+
+      const contract = new KakoroGuardContract(
+        {
+          contractId: VALID_CONTRACT_ID,
+          rpcUrl: "https://soroban-testnet.stellar.org",
+          networkPassphrase: "Test SDF Network ; September 2015",
+        },
+        mockSimulator
+      );
+
+      const now = 1710000000000;
+      const appPayload = { service: "prediction" };
+      const paymentIntent = {
+        amount: "5_XLM",
+        asset: "XLM",
+        max_fee: 100_000,
+        destination: "GPROV",
+      };
+
+      const canonical = serializeSynergisticPayload(appPayload, paymentIntent);
+      const msg = Buffer.from(`${now}.${canonical}`, "utf-8");
+      const sigHex = keypair.sign(msg).toString("hex");
+
+      const middleware = requireAgentRole("Premium", "5_XLM", {
+        contract,
+        verifyOptions: { currentTimeMs: now },
+      });
+
+      const req: KakoroGuardRequest = {
+        headers: {},
+        body: {
+          agent_id: validAgent,
+          timestamp: now,
+          signature: sigHex,
+          payment_intent: paymentIntent,
+          payload: appPayload,
+        },
+      };
+      const mock = createMockResponse();
+
+      let nextCalled = false;
+      await middleware(req, mock.res, () => {
+        nextCalled = true;
+      });
+
+      assert.strictEqual(nextCalled, true);
+      assert.strictEqual(mock.statusCode, 200);
+      assert.strictEqual(req.agentId, validAgent);
+    });
+
+    it("returns 401 when body-based AgentRequestPayload is malformed", async () => {
+      const middleware = requireAgentRole("Premium", "5_XLM", {
+        contract: new KakoroGuardContract({
+          contractId: VALID_CONTRACT_ID,
+          rpcUrl: "https://soroban-testnet.stellar.org",
+          networkPassphrase: "Test SDF Network ; September 2015",
+        }),
+      });
+
+      const req: KakoroGuardRequest = {
+        headers: {},
+        body: {
+          agent_id: validAgent,
+          signature: "some-sig",
+          // missing timestamp!
+        },
+      };
+      const mock = createMockResponse();
+
+      let nextCalled = false;
+      await middleware(req, mock.res, () => {
+        nextCalled = true;
+      });
+
+      assert.strictEqual(nextCalled, false);
+      assert.strictEqual(mock.statusCode, 401);
+      assert.strictEqual((mock.body as { code: string }).code, "UNAUTHORIZED");
     });
   });
 });

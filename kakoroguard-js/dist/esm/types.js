@@ -26,12 +26,15 @@ export function parseRole(role) {
     const normalized = String(role).trim().toLowerCase();
     switch (normalized) {
         case "basic":
+        case "basic_api":
         case "0":
             return Role.Basic;
         case "premium":
+        case "premium_api":
         case "1":
             return Role.Premium;
         case "admin":
+        case "admin_api":
         case "2":
             return Role.Admin;
         default:

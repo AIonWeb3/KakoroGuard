@@ -8,11 +8,22 @@
 export { KakoroGuardContract, type RpcSimulator } from "./contract.js";
 
 export {
+  AgentRequestPayloadSchema,
+  PaymentIntentSchema,
+  type AgentRequestPayload,
+  type AgentRequestPayloadInput,
+  type PaymentIntent,
+} from "./schema.js";
+
+export {
   assertSignatureValid,
+  buildSynergisticSigningMessage,
   canonicalizePayload,
   DEFAULT_CLOCK_SKEW_MS,
   DEFAULT_MAX_AGE_MS,
+  hashSynergisticPayload,
   parseSignature,
+  serializeSynergisticPayload,
   validateTimestamp,
   verifySignature,
 } from "./verifier.js";
@@ -35,6 +46,7 @@ export {
 
 export {
   type AgentAuthHeader,
+  type AgentPaySettler,
   type KakoroGuardConfig,
   type KakoroGuardRequest,
   type KakoroGuardResponse,

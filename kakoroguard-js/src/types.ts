@@ -28,12 +28,15 @@ export function parseRole(role: string | Role): Role {
   const normalized = String(role).trim().toLowerCase();
   switch (normalized) {
     case "basic":
+    case "basic_api":
     case "0":
       return Role.Basic;
     case "premium":
+    case "premium_api":
     case "1":
       return Role.Premium;
     case "admin":
+    case "admin_api":
     case "2":
       return Role.Admin;
     default:
@@ -51,12 +54,31 @@ export enum AgentStatus {
 }
 
 /**
+ * Standard AgentPay settlement client interface.
+ */
+export interface AgentPaySettler {
+  settlePayment(params: {
+    agentId: string;
+    amount: string;
+    asset?: string;
+    maxFee?: number;
+    destination?: string;
+  }): Promise<{ status: string; txHash: string; settled: boolean; [key: string]: unknown }>;
+}
+
+/**
  * Standard KakoroGuard authentication header payload.
  */
 export interface AgentAuthHeader {
   publicKey: string;
   timestamp: number;
   signature: string;
+  paymentIntent?: {
+    amount: string;
+    asset: string;
+    max_fee: number;
+    destination?: string | null;
+  };
 }
 
 /**
@@ -95,6 +117,9 @@ export interface KakoroGuardRequest {
   body?: unknown;
   agentId?: string;
   agentPublicKey?: string;
+  agentTimestamp?: number;
+  paymentIntent?: unknown;
+  paymentReceipt?: unknown;
   [key: string]: unknown;
 }
 
